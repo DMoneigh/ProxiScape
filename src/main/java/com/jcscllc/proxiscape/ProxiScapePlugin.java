@@ -83,7 +83,6 @@ public class ProxiScapePlugin extends Plugin {
             if (voiceClient != null && voiceClient.isRunning())
                 voiceClient.end();
 
-
             PLAYER_INFO = null;
         } else if (gameStateChanged.getGameState() == LOGGED_IN) {
             try {
@@ -113,8 +112,8 @@ public class ProxiScapePlugin extends Plugin {
             return;
 
         SoundManager manager = voiceClient.getSoundManager();
-        Microphone microphone = voiceClient.getSoundManager().getMicrophone();
-        Speaker speaker = voiceClient.getSoundManager().getSpeaker();
+        Microphone microphone = manager.getMicrophone();
+        Speaker speaker = manager.getSpeaker();
 
         switch (key) {
             case "microphone":
@@ -139,17 +138,16 @@ public class ProxiScapePlugin extends Plugin {
 
             case "muted":
                 if (newValue.equals("true"))
-                    voiceClient.getSoundManager().getMicrophone().mute();
+                    microphone.mute();
                 else
-                    voiceClient.getSoundManager().getMicrophone().unmute();
+                    microphone.unmute();
                 break;
 
             case "deafened":
-                if (voiceClient != null)
-                    if (newValue.equals("true"))
-                        voiceClient.getSoundManager().getSpeaker().deafen();
-                    else
-                        voiceClient.getSoundManager().getSpeaker().undeafen();
+                if (newValue.equals("true"))
+                    speaker.deafen();
+                else
+                    speaker.undeafen();
             default:
                 break;
 

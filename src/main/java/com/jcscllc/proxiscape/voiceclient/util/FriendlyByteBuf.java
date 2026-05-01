@@ -1,10 +1,13 @@
 package com.jcscllc.proxiscape.voiceclient.util;
 
+import lombok.Getter;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+@Getter
 public class FriendlyByteBuf {
 
     private final ByteBuffer buffer;
@@ -21,10 +24,6 @@ public class FriendlyByteBuf {
 
     public static FriendlyByteBuf wrap(byte[] data) {
         return new FriendlyByteBuf(ByteBuffer.wrap(data));
-    }
-
-    public ByteBuffer getBuffer() {
-        return buffer;
     }
 
     // ===== WRITE =====

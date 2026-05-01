@@ -17,10 +17,14 @@ import java.util.concurrent.TimeUnit;
 public class VoiceClient extends Thread {
 
     private static final int PACKET_BUFFER_SIZE = 4096;
+
     private final BlockingQueue<DatagramPacket> packetQueue;
+
     private final PacketProcessor packetProcessor;
+
     @Getter
     private DatagramSocket socket;
+
     @Getter
     private PacketManager packetManager;
 

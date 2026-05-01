@@ -67,7 +67,6 @@ public class PacketManager {
 
         switch (type) {
             case AUTHENTICATE_ACK_PACKET:
-                System.out.println("Connected to ProxiScape");
                 break;
 
             case LOCATIONAL_VOICE_PACKET:
