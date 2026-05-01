@@ -2,9 +2,9 @@ package com.jcscllc.proxiscape.voiceclient.sound.util;
 
 import com.jcscllc.proxiscape.ProxiScapePlugin;
 import com.jcscllc.proxiscape.voiceclient.sound.SoundManager;
-import io.github.jaredmdobson.concentus.OpusDecoder;
-import io.github.jaredmdobson.concentus.OpusException;
 import lombok.Getter;
+import org.concentus.OpusDecoder;
+import org.concentus.OpusException;
 
 import javax.sound.sampled.*;
 import javax.swing.*;

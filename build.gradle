@@ -23,8 +23,6 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
     implementation("com.google.code.findbugs:jsr305:3.0.2")
-    implementation("io.github.jaredmdobson:concentus:1.0.2")
-    implementation("io.netty:netty-all:4.2.12.Final")
 
     testImplementation 'junit:junit:4.12'
     testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion

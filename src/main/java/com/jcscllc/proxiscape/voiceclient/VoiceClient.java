@@ -4,7 +4,6 @@ import com.jcscllc.proxiscape.ProxiScapePlugin;
 import com.jcscllc.proxiscape.voiceclient.packet.PacketManager;
 import com.jcscllc.proxiscape.voiceclient.sound.SoundManager;
 import com.jcscllc.proxiscape.voiceclient.util.FriendlyByteBuf;
-import io.netty.buffer.Unpooled;
 import lombok.Getter;
 
 import java.io.IOException;
@@ -106,7 +105,7 @@ public class VoiceClient extends Thread {
                     if (packet == null)
                         continue;
 
-                    packetManager.read(packet.getSocketAddress(), new FriendlyByteBuf(Unpooled.wrappedBuffer(packet.getData(), 0, packet.getLength())));
+                    packetManager.read(packet.getSocketAddress(), FriendlyByteBuf.wrap(packet.getData())); //dont forget length if it gets bad
 
                 } catch (Exception e) {
                     e.printStackTrace();

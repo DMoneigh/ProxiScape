@@ -83,9 +83,7 @@ public class PacketManager {
 
                 int length = fbb.readVarInt();
 
-                byte[] opusIn = new byte[length];
-
-                fbb.readBytes(opusIn);
+                byte[] opusIn = fbb.readBytes(length);
 
                 client.getSoundManager().getSpeaker().queueLocationalSoundPacket(opusIn, x, y, plane);
                 break;
@@ -93,9 +91,7 @@ public class PacketManager {
             case STATIC_VOICE_PACKET:
                 length = fbb.readVarInt();
 
-                opusIn = new byte[length];
-
-                fbb.readBytes(opusIn);
+                opusIn = fbb.readBytes(length);
 
                 client.getSoundManager().getSpeaker().queueStaticSoundPacket(opusIn);
                 break;
@@ -114,17 +110,21 @@ public class PacketManager {
     }
 
     public void write(byte type, SocketAddress to, FriendlyByteBuf data) throws Exception {
-        FriendlyByteBuf fbb = new FriendlyByteBuf();
+        FriendlyByteBuf fbb = new FriendlyByteBuf(5000);
         fbb.writeByte(MAGIC_BYTE); //Write magic byte
         fbb.writeLong(System.currentTimeMillis()); //Write timestamp
         fbb.writeByte(type); //Write type
-        fbb.writeBytes(data); //Append data
 
-        client.getSocket().send(new DatagramPacket(fbb.array(), fbb.readableBytes(), to));
+        byte[] array = data.toByteArray();
+
+        fbb.writeBytes(array, array.length); //Append data
+
+        byte[] writable = fbb.toByteArray();
+        client.getSocket().send(new DatagramPacket(writable, writable.length, to));
     }
 
     public void writeAuthenticatePacket(String hash, String username) throws Exception {
-        FriendlyByteBuf buf = new FriendlyByteBuf();
+        FriendlyByteBuf buf = new FriendlyByteBuf(5000);
         buf.writeUtf(hash);
         buf.writeUtf(username);
 
@@ -132,14 +132,14 @@ public class PacketManager {
     }
 
     public void writeKeepAlivePacket(String hash) throws Exception {
-        FriendlyByteBuf buf = new FriendlyByteBuf();
+        FriendlyByteBuf buf = new FriendlyByteBuf(5000);
         buf.writeUtf(hash);
 
         write(KEEP_ALIVE_PACKET, sock, buf);
     }
 
     public void writePositionUpdatePacket(String hash, int world, int x, int y) throws Exception {
-        FriendlyByteBuf buf = new FriendlyByteBuf();
+        FriendlyByteBuf buf = new FriendlyByteBuf(5000);
         buf.writeUtf(hash);
         buf.writeInt(world);
         buf.writeInt(x);
@@ -149,14 +149,14 @@ public class PacketManager {
     }
 
     public void writeLocationalVoiceData(String hash, int world, int x, int y, int plane, byte[] voiceData, int length) throws Exception {
-        FriendlyByteBuf buf = new FriendlyByteBuf();
+        FriendlyByteBuf buf = new FriendlyByteBuf(5000);
         buf.writeUtf(hash);
         buf.writeInt(world);
         buf.writeInt(x);
         buf.writeInt(y);
         buf.writeInt(plane);
         buf.writeVarInt(length);
-        buf.writeBytes(voiceData, 0, length);
+        buf.writeBytes(voiceData, length);
 
         write(LOCATIONAL_VOICE_PACKET, sock, buf);
     }
