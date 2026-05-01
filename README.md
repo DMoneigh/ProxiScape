@@ -1,3 +1,3 @@
-# Example
+# ProxiScape
 
-An example greeter plugin
+The first ever proximity voice chat plugin. (Alpha)
