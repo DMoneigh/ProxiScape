@@ -3,6 +3,7 @@ package com.jcscllc.proxiscape.voiceclient.sound.util;
 import com.jcscllc.proxiscape.ProxiScapePlugin;
 import com.jcscllc.proxiscape.voiceclient.sound.SoundManager;
 import lombok.Getter;
+import lombok.Setter;
 import org.concentus.OpusDecoder;
 import org.concentus.OpusException;
 
@@ -23,7 +24,12 @@ public class Speaker extends Thread {
 
     private final BlockingQueue<Object[]> locationalSoundPackets;
 
+    @Setter
+    @Getter
     private SourceDataLine spkr;
+
+    @Getter
+    private Mixer.Info spkrInfo;
 
     @Getter
     private boolean running;
@@ -41,7 +47,7 @@ public class Speaker extends Thread {
         running = true;
     }
 
-    public void captureAndStartSpeaker() {
+    public void chooseSpeaker() {
         JDialog dialog = new JDialog();
 
         dialog.setTitle("Choose your Speaker");
@@ -60,8 +66,8 @@ public class Speaker extends Thread {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                DataLine.Info info = new DataLine.Info(SourceDataLine.class, SoundManager.AUDIO_FORMAT);
-                Mixer mixer = AudioSystem.getMixer(spkrs.get(spkrNames.getSelectedItem().toString()));
+                DataLine.Info info = new DataLine.Info(SourceDataLine.class, soundManager.getAudioFormat());
+                Mixer mixer = AudioSystem.getMixer(spkrInfo = spkrs.get(spkrNames.getSelectedItem().toString()));
 
                 try {
                     spkr = (SourceDataLine) mixer.getLine(info);
@@ -102,13 +108,27 @@ public class Speaker extends Thread {
         return speakers;
     }
 
-    public void queueStaticSoundPacket(byte[] soundPacket) {
-        queueLocationalSoundPacket(soundPacket, (Integer) ProxiScapePlugin.PLAYER_INFO[3], (int) ProxiScapePlugin.PLAYER_INFO[4], (int) ProxiScapePlugin.PLAYER_INFO[5]);
+    public void reconnect(Mixer.Info info) {
+        DataLine.Info dInfo = new DataLine.Info(SourceDataLine.class, soundManager.getAudioFormat());
+
+        try {
+            spkr = (SourceDataLine) AudioSystem.getMixer(info).getLine(dInfo);
+
+            running = true;
+
+            this.start();
+        } catch (LineUnavailableException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public void queueLocationalSoundPacket(byte[] soundPacket, int x, int y, int plane) {
+    public void queueStaticSoundPacket(byte[] soundPacket) {
+        queueLocationalSoundPacket(soundPacket, "", -1, (Integer) ProxiScapePlugin.PLAYER_INFO[3], (int) ProxiScapePlugin.PLAYER_INFO[4], (int) ProxiScapePlugin.PLAYER_INFO[5]);
+    }
+
+    public void queueLocationalSoundPacket(byte[] soundPacket, String name, int world, int x, int y, int plane) {
         if (spkr != null)
-            locationalSoundPackets.add(new Object[]{soundPacket, x, y, plane});
+            locationalSoundPackets.add(new Object[]{soundPacket, name, world, x, y, plane});
     }
 
     public void end() {
@@ -129,7 +149,7 @@ public class Speaker extends Thread {
     @Override
     public void run() {
         try {
-            spkr.open(SoundManager.AUDIO_FORMAT);
+            spkr.open(soundManager.getAudioFormat());
             spkr.start();
 
             int frameSize = 960;
@@ -137,10 +157,11 @@ public class Speaker extends Thread {
             byte[] pcmBytes = new byte[frameSize * 2];
 
             OpusDecoder decoder = new OpusDecoder(16000, 1);
+
             while (running) {
                 Object[] soundPacket = locationalSoundPackets.poll(10, TimeUnit.MILLISECONDS);
 
-                if (soundPacket == null || spkr == null || soundPacket[3] != ProxiScapePlugin.PLAYER_INFO[5])
+                if (soundPacket == null || spkr == null || soundPacket[5] != ProxiScapePlugin.PLAYER_INFO[5])
                     continue;
 
                 byte[] opusData = (byte[]) soundPacket[0];
@@ -163,8 +184,8 @@ public class Speaker extends Thread {
                 int x1 = (int) ProxiScapePlugin.PLAYER_INFO[3];
                 int y1 = (int) ProxiScapePlugin.PLAYER_INFO[4];
 
-                int x2 = (int) soundPacket[1];
-                int y2 = (int) soundPacket[2];
+                int x2 = (int) soundPacket[3];
+                int y2 = (int) soundPacket[4];
 
                 int dx = x2 - x1;
                 int dy = y2 - y1;
@@ -175,6 +196,8 @@ public class Speaker extends Thread {
                     applyGain(pcmBytes, decoded * 2, 1.0F - (distance / 20.0F));
 
                 spkr.write(pcmBytes, 0, decoded * 2);
+
+                //TODO Draw mic over head of who is talking
 
             }
         } catch (InterruptedException | OpusException | LineUnavailableException e) {

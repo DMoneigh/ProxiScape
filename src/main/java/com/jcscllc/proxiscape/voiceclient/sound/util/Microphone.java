@@ -4,6 +4,7 @@ import com.jcscllc.proxiscape.ProxiScapePlugin;
 import com.jcscllc.proxiscape.voiceclient.sound.SoundManager;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.concentus.OpusApplication;
 import org.concentus.OpusEncoder;
 
@@ -12,6 +13,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.annotation.Target;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,7 +21,12 @@ public class Microphone extends Thread {
 
     private final SoundManager soundManager;
 
+    @Setter
+    @Getter
     private TargetDataLine mic;
+
+    @Getter
+    private Mixer.Info micInfo;
 
     @Getter
     private boolean running;
@@ -33,7 +40,7 @@ public class Microphone extends Thread {
         setDaemon(true);
     }
 
-    public void captureAndStartMicrophone() {
+    public void chooseMicrophone() {
         JDialog dialog = new JDialog();
 
         dialog.setTitle("Choose your Microphone");
@@ -53,8 +60,8 @@ public class Microphone extends Thread {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                DataLine.Info info = new DataLine.Info(TargetDataLine.class, SoundManager.AUDIO_FORMAT);
-                Mixer mixer = AudioSystem.getMixer(mics.get(micNames.getSelectedItem().toString()));
+                DataLine.Info info = new DataLine.Info(TargetDataLine.class, soundManager.getAudioFormat());
+                Mixer mixer = AudioSystem.getMixer(micInfo = mics.get(micNames.getSelectedItem().toString()));
 
                 try {
                     mic = (TargetDataLine) mixer.getLine(info);
@@ -95,6 +102,20 @@ public class Microphone extends Thread {
         return microphones;
     }
 
+    public void reconnect(Mixer.Info info) {
+        DataLine.Info dInfo = new DataLine.Info(TargetDataLine.class, soundManager.getAudioFormat());
+
+        try {
+            mic = (TargetDataLine) AudioSystem.getMixer(info).getLine(dInfo);
+
+            running = true;
+
+            this.start();
+        } catch (LineUnavailableException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void end() {
         running = false;
 
@@ -113,7 +134,7 @@ public class Microphone extends Thread {
     @Override
     public void run() {
         try {
-            mic.open(SoundManager.AUDIO_FORMAT);
+            mic.open(soundManager.getAudioFormat());
             mic.start();
 
             int frameSize = 960;
@@ -144,7 +165,9 @@ public class Microphone extends Thread {
                     if (muted)
                         continue;
 
-                    soundManager.getClient().getPacketManager().writeLocationalVoiceData((String) playerInfo[0], (int) playerInfo[2], (int) playerInfo[3], (int) playerInfo[4], (int) playerInfo[5], opusBuffer, encoded);
+                    System.out.println("writing");
+
+                    soundManager.getClient().getPacketManager().writeLocationalVoiceData("" + playerInfo[0], (int) playerInfo[2], (int) playerInfo[3], (int) playerInfo[4], (int) playerInfo[5], opusBuffer, encoded);
 //                   soundManager.getClient().getPacketManager().writeStaticVoiceData(opusBuffer, encoded);
                 }
             }

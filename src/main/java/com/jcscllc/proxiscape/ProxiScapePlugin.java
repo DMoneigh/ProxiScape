@@ -19,6 +19,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
+import javax.sound.sampled.Mixer;
 import java.net.SocketException;
 
 import static net.runelite.api.GameState.LOGGED_IN;
@@ -30,10 +31,13 @@ import static net.runelite.api.GameState.LOGIN_SCREEN;
 )
 public class ProxiScapePlugin extends Plugin {
 
+    @Inject
+    private Client client;
+
     public static Object[] PLAYER_INFO;
 
     @Inject
-    private Client client;
+    private ConfigManager configManager;
 
     @Inject
     private ProxiScapeConfig config;
@@ -67,7 +71,14 @@ public class ProxiScapePlugin extends Plugin {
             }
         }
 
-        PLAYER_INFO = new Object[]{client.getAccountHash(), player.getName(), client.getWorld(), x, y, wp.getPlane()};
+        PLAYER_INFO = new Object[] {
+                client.getAccountHash(),
+                player.getName(),
+                client.getWorld(),
+                x,
+                y,
+                wp.getPlane()
+        };
 
         try {
             voiceClient.getPacketManager().writePositionUpdatePacket(client.getAccountHash() + "", client.getWorld(), x, y);
@@ -85,8 +96,30 @@ public class ProxiScapePlugin extends Plugin {
 
             PLAYER_INFO = null;
         } else if (gameStateChanged.getGameState() == LOGGED_IN) {
+            Mixer.Info micInfo = null;
+            Mixer.Info speakerInfo = null;
+
+            if (voiceClient != null) {
+                SoundManager oldSoundManager = voiceClient.getSoundManager();
+
+                if (oldSoundManager.getMicrophone().getMicInfo() != null)
+                    micInfo = oldSoundManager.getMicrophone().getMicInfo();
+
+                if (oldSoundManager.getSpeaker().getSpkrInfo() != null)
+                    speakerInfo = oldSoundManager.getSpeaker().getSpkrInfo();
+            }
+
             try {
                 voiceClient = new VoiceClient();
+
+                SoundManager newSoundManager = voiceClient.getSoundManager();
+
+                if (micInfo != null)
+                    newSoundManager.getMicrophone().reconnect(micInfo);
+
+                if (speakerInfo != null)
+                    newSoundManager.getSpeaker().reconnect(speakerInfo);
+
                 voiceClient.start();
             } catch (SocketException e) {
                 e.printStackTrace();
@@ -123,7 +156,7 @@ public class ProxiScapePlugin extends Plugin {
                     manager.setMicrophone(new Microphone(manager));
                 }
 
-                manager.getMicrophone().captureAndStartMicrophone();
+                manager.getMicrophone().chooseMicrophone();
                 break;
 
             case "speaker":
@@ -133,7 +166,7 @@ public class ProxiScapePlugin extends Plugin {
                     manager.setSpeaker(new Speaker(manager));
                 }
 
-                manager.getSpeaker().captureAndStartSpeaker();
+                manager.getSpeaker().chooseSpeaker();
                 break;
 
             case "muted":
@@ -148,6 +181,8 @@ public class ProxiScapePlugin extends Plugin {
                     speaker.deafen();
                 else
                     speaker.undeafen();
+                break;
+
             default:
                 break;
 

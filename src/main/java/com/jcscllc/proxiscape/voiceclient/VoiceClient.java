@@ -109,8 +109,7 @@ public class VoiceClient extends Thread {
                     if (packet == null)
                         continue;
 
-                    packetManager.read(packet.getSocketAddress(), FriendlyByteBuf.wrap(packet.getData())); //dont forget length if it gets bad
-
+                    packetManager.read(packet.getSocketAddress(), FriendlyByteBuf.wrap(packet.getData()));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

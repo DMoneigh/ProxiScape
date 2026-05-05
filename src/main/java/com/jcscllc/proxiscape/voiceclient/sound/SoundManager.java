@@ -10,7 +10,8 @@ import javax.sound.sampled.AudioFormat;
 
 public class SoundManager {
 
-    public static final AudioFormat AUDIO_FORMAT = new AudioFormat(
+    @Getter
+    private final AudioFormat audioFormat = new AudioFormat(
             16000, // sample rate
             16,    // sample size
             1,     // mono

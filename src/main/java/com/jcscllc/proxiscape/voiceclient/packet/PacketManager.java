@@ -84,7 +84,7 @@ public class PacketManager {
 
                 byte[] opusIn = fbb.readBytes(length);
 
-                client.getSoundManager().getSpeaker().queueLocationalSoundPacket(opusIn, x, y, plane);
+                client.getSoundManager().getSpeaker().queueLocationalSoundPacket(opusIn, name, world, x, y, plane);
                 break;
 
             case STATIC_VOICE_PACKET:
@@ -135,6 +135,13 @@ public class PacketManager {
         buf.writeUtf(hash);
 
         write(KEEP_ALIVE_PACKET, sock, buf);
+    }
+
+    public void writePingPacket(String hash) throws Exception {
+        FriendlyByteBuf buf = new FriendlyByteBuf(5000);
+        buf.writeUtf(hash);
+
+        write(PING_PACKET, sock, buf);
     }
 
     public void writePositionUpdatePacket(String hash, int world, int x, int y) throws Exception {
