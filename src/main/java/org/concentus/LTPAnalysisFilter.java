@@ -76,7 +76,7 @@ class LTPAnalysisFilter {
                 LTP_est = Inlines.silk_RSHIFT_ROUND(LTP_est, 14);
                 /* round and . Q0*/
 
-                /* Subtract long-term prediction */
+ /* Subtract long-term prediction */
                 LTP_res[LTP_res_ptri] = (short) Inlines.silk_SAT16((int) x[x_ptr2 + i] - LTP_est);
 
                 /* Scale residual */

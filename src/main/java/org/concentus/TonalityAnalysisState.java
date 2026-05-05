@@ -36,12 +36,15 @@ package org.concentus;
 
 class TonalityAnalysisState {
 
+    boolean enabled = false;
     final float[] angle = new float[240];
     final float[] d_angle = new float[240];
     final float[] d2_angle = new float[240];
     final int[] inmem = new int[OpusConstants.ANALYSIS_BUF_SIZE];
+    int mem_fill;
     /* number of usable samples in the buffer */
     final float[] prev_band_tonality = new float[OpusConstants.NB_TBANDS];
+    float prev_tonality;
     final float[][] E = Arrays.InitTwoDimensionalArrayFloat(OpusConstants.NB_FRAMES, OpusConstants.NB_TBANDS);
     final float[] lowE = new float[OpusConstants.NB_TBANDS];
     final float[] highE = new float[OpusConstants.NB_TBANDS];
@@ -49,7 +52,15 @@ class TonalityAnalysisState {
     final float[] mem = new float[32];
     final float[] cmean = new float[8];
     final float[] std = new float[9];
+    float music_prob;
+    float Etracker;
+    float lowECount;
+    int E_count;
+    int last_music;
+    int last_transition;
+    int count;
     final float[] subframe_mem = new float[3];
+    int analysis_offset;
     /**
      * Probability of having speech for time i to DETECT_SIZE-1 (and music
      * before). pspeech[0] is the probability that all frames in the window are
@@ -62,18 +73,6 @@ class TonalityAnalysisState {
      * music.
      */
     final float[] pmusic = new float[OpusConstants.DETECT_SIZE];
-    final AnalysisInfo[] info = new AnalysisInfo[OpusConstants.DETECT_SIZE];
-    boolean enabled = false;
-    int mem_fill;
-    float prev_tonality;
-    float music_prob;
-    float Etracker;
-    float lowECount;
-    int E_count;
-    int last_music;
-    int last_transition;
-    int count;
-    int analysis_offset;
     float speech_confidence;
     float music_confidence;
     int speech_confidence_count;
@@ -81,6 +80,7 @@ class TonalityAnalysisState {
     int write_pos;
     int read_pos;
     int read_subframe;
+    final AnalysisInfo[] info = new AnalysisInfo[OpusConstants.DETECT_SIZE];
 
     TonalityAnalysisState() {
         for (int c = 0; c < OpusConstants.DETECT_SIZE; c++) {

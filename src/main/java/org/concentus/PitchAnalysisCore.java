@@ -46,6 +46,17 @@ class PitchAnalysisCore {
     private static final int D_COMP_MAX = (MAX_LAG_8KHZ + 4);
     private static final int D_COMP_STRIDE = (D_COMP_MAX - D_COMP_MIN);
 
+    // typedef int silk_pe_stage3_vals[SilkConstants.PE_NB_STAGE3_LAGS];
+    // fixme can I linearize this?
+    static class silk_pe_stage3_vals {
+
+        public final int[] Values = new int[SilkConstants.PE_NB_STAGE3_LAGS];
+    }
+
+    /**
+     * **********************************************************
+     */
+    /*      FIXED POINT CORE PITCH ANALYSIS FUNCTION             */
     /**
      * **********************************************************
      */
@@ -138,7 +149,7 @@ class PitchAnalysisCore {
          * *****************************************************************************
          ** Scale 4 kHz signal down to prevent correlations measures from
          * overflowing * find scaling as max scaling for each 8kHz(?) subframe
-         ******************************************************************************
+        ******************************************************************************
          */
 
         /* Inner product is calculated with different lengths, so scale for the worst case */
@@ -158,7 +169,7 @@ class PitchAnalysisCore {
         /**
          * ****************************************************************************
          * FIRST STAGE, operating in 4 khz
-         *****************************************************************************
+        *****************************************************************************
          */
         C = new short[nb_subfr * CSTRIDE_8KHZ];
         xcorr32 = new int[MAX_LAG_4KHZ - MIN_LAG_4KHZ + 1];
@@ -181,7 +192,7 @@ class PitchAnalysisCore {
                     (short) Inlines.silk_DIV32_varQ(cross_corr, normalizer, 13 + 1));
             /* Q13 */
 
-            /* From now on normalizer is computed recursively */
+ /* From now on normalizer is computed recursively */
             for (d = MIN_LAG_4KHZ + 1; d <= MAX_LAG_4KHZ; d++) {
                 basis_ptr--;
 
@@ -190,7 +201,7 @@ class PitchAnalysisCore {
                 /* Add contribution of new sample and remove contribution from oldest sample */
                 normalizer = Inlines.silk_ADD32(normalizer,
                         Inlines.silk_SMULBB(basis[basis_ptr], basis[basis_ptr])
-                                - Inlines.silk_SMULBB(basis[basis_ptr + SF_LENGTH_8KHZ], basis[basis_ptr + SF_LENGTH_8KHZ]));
+                        - Inlines.silk_SMULBB(basis[basis_ptr + SF_LENGTH_8KHZ], basis[basis_ptr + SF_LENGTH_8KHZ]));
 
                 Inlines.MatrixSet(C, k, d - MIN_LAG_4KHZ, CSTRIDE_4KHZ,
                         (short) Inlines.silk_DIV32_varQ(cross_corr, normalizer, 13 + 1));
@@ -290,12 +301,12 @@ class PitchAnalysisCore {
          * ********************************************************************************
          ** SECOND STAGE, operating at 8 kHz, on lag sections with high
          * correlation
-         ************************************************************************************
+        ************************************************************************************
          */
         /**
          * ****************************************************************************
          ** Scale signal down to avoid correlations measures from overflowing
-         ******************************************************************************
+        ******************************************************************************
          */
         /* find scaling as max scaling for each subframe */
         boxed_energy.Val = 0;
@@ -315,7 +326,7 @@ class PitchAnalysisCore {
          * *******************************************************************************
          * Find energy of each subframe projected onto its history, for a range
          * of delays
-         ********************************************************************************
+        ********************************************************************************
          */
         Arrays.MemSet(C, (short) 0, nb_subfr * CSTRIDE_8KHZ);
 
@@ -346,7 +357,7 @@ class PitchAnalysisCore {
         }
 
         /* search over lag range and lags codebook */
-        /* scale factor for lag codebook, as a function of center lag */
+ /* scale factor for lag codebook, as a function of center lag */
         CCmax = Integer.MIN_VALUE;
         CCmax_b = Integer.MIN_VALUE;
 
@@ -390,8 +401,8 @@ class PitchAnalysisCore {
                     d_subfr = d + Lag_CB_ptr[i][j];
                     CC[j] = CC[j]
                             + (int) Inlines.MatrixGet(C, i,
-                            d_subfr - (MIN_LAG_8KHZ - 2),
-                            CSTRIDE_8KHZ);
+                                    d_subfr - (MIN_LAG_8KHZ - 2),
+                                    CSTRIDE_8KHZ);
                 }
             }
             /* Find best codebook */
@@ -412,7 +423,7 @@ class PitchAnalysisCore {
             CCmax_new_b = CCmax_new - Inlines.silk_RSHIFT(Inlines.silk_SMULBB(nb_subfr * ((int) ((SilkConstants.PE_SHORTLAG_BIAS) * ((long) 1 << (13)) + 0.5))/*Inlines.SILK_CONST(SilkConstants.PE_SHORTLAG_BIAS, 13)*/, lag_log2_Q7), 7);
             /* Q13 */
 
-            /* Bias towards previous lag */
+ /* Bias towards previous lag */
             Inlines.OpusAssert(nb_subfr * ((int) ((SilkConstants.PE_PREVLAG_BIAS) * ((long) 1 << (13)) + 0.5))/*Inlines.SILK_CONST(SilkConstants.PE_PREVLAG_BIAS, 13)*/ == Inlines.silk_SAT16(nb_subfr * ((int) ((SilkConstants.PE_PREVLAG_BIAS) * ((long) 1 << (13)) + 0.5))/*Inlines.SILK_CONST(SilkConstants.PE_PREVLAG_BIAS, 13)*/));
             if (prevLag > 0) {
                 delta_lag_log2_sqr_Q7 = lag_log2_Q7 - prevLag_log2_Q7;
@@ -545,7 +556,7 @@ class PitchAnalysisCore {
                     if (cross_corr > 0) {
                         CCmax_new = Inlines.silk_DIV32_varQ(cross_corr, energy, 13 + 1);
                         /* Q13 */
-                        /* Reduce depending on flatness of contour */
+ /* Reduce depending on flatness of contour */
                         diff = Short.MAX_VALUE - Inlines.silk_MUL(contour_bias_Q15, j);
                         /* Q15 */
                         Inlines.OpusAssert(diff == Inlines.silk_SAT16(diff));
@@ -572,7 +583,7 @@ class PitchAnalysisCore {
             contourIndex.Val = (byte) CBimax;
         } else {
             /* Fs_kHz == 8 */
-            /* Save Lags */
+ /* Save Lags */
             for (k = 0; k < nb_subfr; k++) {
                 pitch_out[k] = lag + Lag_CB_ptr[k][CBimax];
                 pitch_out[k] = Inlines.silk_LIMIT(pitch_out[k], MIN_LAG_8KHZ, SilkConstants.PE_MAX_LAG_MS * 8);
@@ -587,23 +598,18 @@ class PitchAnalysisCore {
     }
 
     /**
-     * **********************************************************
-     */
-    /*      FIXED POINT CORE PITCH ANALYSIS FUNCTION             */
-
-    /**
      * *********************************************************************
      * Calculates the correlations used in stage 3 search. In order to cover the
      * whole lag codebook for all the searched offset lags (lag +- 2), the
      * following correlations are needed in each sub frame:
-     * <p>
+     *
      * sf1: lag range [-8,...,7] total 16 correlations sf2: lag range [-4,...,4]
      * total 9 correlations sf3: lag range [-3,....4] total 8 correltions sf4:
      * lag range [-6,....8] total 15 correlations
-     * <p>
+     *
      * In total 48 correlations. The direct implementation computed in worst
      * case 4*12*5 = 240 correlations, but more likely around 120.
-     * *********************************************************************
+     **********************************************************************
      */
     private static void silk_P_Ana_calc_corr_st3(
             silk_pe_stage3_vals[] cross_corr_st3, /* O 3 DIM correlation array */
@@ -656,7 +662,7 @@ class PitchAnalysisCore {
             delta = Lag_range_ptr[k][0];
             for (i = 0; i < nb_cbk_search; i++) {
                 /* Fill out the 3 dim array that stores the correlations for */
-                /* each code_book vector for each start lag */
+ /* each code_book vector for each start lag */
                 idx = Lag_CB_ptr[k][i] - delta;
                 for (j = 0; j < SilkConstants.PE_NB_STAGE3_LAGS; j++) {
                     Inlines.OpusAssert(idx + j < SCRATCH_SIZE);
@@ -670,6 +676,11 @@ class PitchAnalysisCore {
 
     }
 
+    /**
+     * *****************************************************************
+     */
+    /* Calculate the energies for first two subframes. The energies are */
+ /* calculated recursively.                                          */
     /**
      * *****************************************************************
      */
@@ -732,7 +743,7 @@ class PitchAnalysisCore {
             delta = Lag_range_ptr[k][0];
             for (i = 0; i < nb_cbk_search; i++) {
                 /* Fill out the 3 dim array that stores the correlations for    */
-                /* each code_book vector for each start lag                     */
+ /* each code_book vector for each start lag                     */
                 idx = Lag_CB_ptr[k][i] - delta;
                 for (j = 0; j < SilkConstants.PE_NB_STAGE3_LAGS; j++) {
                     Inlines.OpusAssert(idx + j < SCRATCH_SIZE);
@@ -743,18 +754,5 @@ class PitchAnalysisCore {
             }
             target_ptr += sf_length;
         }
-    }
-
-    /**
-     * *****************************************************************
-     */
-    /* Calculate the energies for first two subframes. The energies are */
-    /* calculated recursively.                                          */
-
-    // typedef int silk_pe_stage3_vals[SilkConstants.PE_NB_STAGE3_LAGS];
-    // fixme can I linearize this?
-    static class silk_pe_stage3_vals {
-
-        public final int[] Values = new int[SilkConstants.PE_NB_STAGE3_LAGS];
     }
 }

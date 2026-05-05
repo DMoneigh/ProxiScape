@@ -37,7 +37,7 @@ class LPCInversePredGain {
     private static final int A_LIMIT = ((int) ((0.99975f) * ((long) 1 << (QA)) + 0.5))/*Inlines.SILK_CONST(0.99975f, QA)*/;
 
     /* Compute inverse of LPC prediction gain, and                          */
-    /* test if LPC coefficients are stable (all poles within unit circle)   */
+ /* test if LPC coefficients are stable (all poles within unit circle)   */
     static int LPC_inverse_pred_gain_QA( /* O   Returns inverse prediction gain in energy domain, Q30    */
             int[][] A_QA, /* I   Prediction coefficients [ 2 ][SILK_MAX_ORDER_LPC]                                 */
             int order /* I   Prediction order                                         */
@@ -70,7 +70,7 @@ class LPCInversePredGain {
             rc_mult2 = Inlines.silk_INVERSE32_varQ(rc_mult1_Q30, mult2Q + 30);
 
             /* Update inverse gain */
-            /* invGain_Q30 range: [ 0 : 2^30 ] */
+ /* invGain_Q30 range: [ 0 : 2^30 ] */
             invGain_Q30 = Inlines.silk_LSHIFT(Inlines.silk_SMMUL(invGain_Q30, rc_mult1_Q30), 2);
             Inlines.OpusAssert(invGain_Q30 >= 0);
             Inlines.OpusAssert(invGain_Q30 <= (1 << 30));
@@ -98,7 +98,7 @@ class LPCInversePredGain {
         rc_mult1_Q30 = ((int) 1 << 30) - Inlines.silk_SMMUL(rc_Q31, rc_Q31);
 
         /* Update inverse gain */
-        /* Range: [ 0 : 2^30 ] */
+ /* Range: [ 0 : 2^30 ] */
         invGain_Q30 = Inlines.silk_LSHIFT(Inlines.silk_SMMUL(invGain_Q30, rc_mult1_Q30), 2);
         Inlines.OpusAssert(invGain_Q30 >= 0);
         Inlines.OpusAssert(invGain_Q30 <= 1 << 30);

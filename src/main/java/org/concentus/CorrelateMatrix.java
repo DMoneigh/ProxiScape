@@ -34,7 +34,7 @@ package org.concentus;
 /**
  * ********************************************************************
  * Correlation Matrix Computations for LS estimate.
- * ********************************************************************
+ *********************************************************************
  */
 class CorrelateMatrix {
 
@@ -110,7 +110,7 @@ class CorrelateMatrix {
         rshifts_local += head_room_rshifts;
 
         /* Calculate energy of first column (0) of X: X[:,0]'*X[:,0] */
-        /* Remove contribution of first order - 1 samples */
+ /* Remove contribution of first order - 1 samples */
         for (i = x_ptr; i < x_ptr + order - 1; i++) {
             energy -= Inlines.silk_RSHIFT32(Inlines.silk_SMULBB(x[i], x[i]), rshifts_local);
         }
@@ -121,7 +121,7 @@ class CorrelateMatrix {
         }
 
         /* Calculate energy of remaining columns of X: X[:,j]'*X[:,j] */
-        /* Fill out the diagonal of the correlation matrix */
+ /* Fill out the diagonal of the correlation matrix */
         Inlines.MatrixSet(XX, XX_ptr, 0, 0, order, energy);
         ptr1 = x_ptr + order - 1;
         /* First sample of column 0 of X */
@@ -133,7 +133,7 @@ class CorrelateMatrix {
 
         ptr2 = x_ptr + order - 2;
         /* First sample of column 1 of X */
-        /* Calculate the remaining elements of the correlation matrix */
+ /* Calculate the remaining elements of the correlation matrix */
         if (rshifts_local > 0) {
             /* Right shifting used */
             for (lag = 1; lag < order; lag++) {

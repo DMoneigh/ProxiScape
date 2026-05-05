@@ -37,6 +37,10 @@ package org.concentus;
 class SilkChannelEncoder {
 
     final int[] In_HP_State = new int[2];
+    /* High pass filter state                                           */
+    int variable_HP_smth1_Q15 = 0;
+    /* State of first smoother                                          */
+    int variable_HP_smth2_Q15 = 0;
     /* State of second smoother                                         */
     final SilkLPState sLP = new SilkLPState();
     /* Low pass filter state                                            */
@@ -45,28 +49,6 @@ class SilkChannelEncoder {
     final SilkNSQState sNSQ = new SilkNSQState();
     /* Noise Shape Quantizer State                                      */
     final short[] prev_NLSFq_Q15 = new short[SilkConstants.MAX_LPC_ORDER];
-    /* Pointer to NLSF codebook                                         */
-    final int[] input_quality_bands_Q15 = new int[SilkConstants.VAD_N_BANDS];
-    final byte[] VAD_flags = new byte[SilkConstants.MAX_FRAMES_PER_PACKET];
-    final int[] LBRR_flags = new int[SilkConstants.MAX_FRAMES_PER_PACKET];
-    final SideInfoIndices indices = new SideInfoIndices();
-    final byte[] pulses = new byte[SilkConstants.MAX_FRAME_LENGTH];
-    /* Input/output buffering */
-    final short[] inputBuf = new short[SilkConstants.MAX_FRAME_LENGTH + 2];
-    final SilkResamplerState resampler_state = new SilkResamplerState();
-    /* Gains increment for coding LBRR frames                           */
-    final SideInfoIndices[] indices_LBRR = new SideInfoIndices[SilkConstants.MAX_FRAMES_PER_PACKET];
-    final byte[][] pulses_LBRR = Arrays.InitTwoDimensionalArrayByte(SilkConstants.MAX_FRAMES_PER_PACKET, SilkConstants.MAX_FRAME_LENGTH);
-    /* Noise shaping state */
-    final SilkShapeState sShape = new SilkShapeState();
-    /* Prefilter State */
-    final SilkPrefilterState sPrefilt = new SilkPrefilterState();
-    /* Buffer for find pitch and noise shape analysis */
-    final short[] x_buf = new short[2 * SilkConstants.MAX_FRAME_LENGTH + SilkConstants.LA_SHAPE_MAX];
-    /* High pass filter state                                           */
-    int variable_HP_smth1_Q15 = 0;
-    /* State of first smoother                                          */
-    int variable_HP_smth2_Q15 = 0;
     /* Previously quantized NLSF vector                                 */
     int speech_activity_Q8 = 0;
     /* Speech activity                                                  */
@@ -132,7 +114,6 @@ class SilkChannelEncoder {
     int mu_LTP_Q9 = 0;
     /* Rate-distortion tradeoff in LTP quantization                     */
     int sum_log_gain_Q7 = 0;
-    /* Quality setting                                                  */
     /* Cumulative max prediction gain                                   */
     int NLSF_MSVQ_Survivors = 0;
     /* Number of survivors in NLSF MSVQ                                 */
@@ -151,35 +132,67 @@ class SilkChannelEncoder {
     short[] pitch_contour_iCDF = null;
     /* Pointer to iCDF table for pitch contour index                    */
     NLSFCodebook psNLSF_CB = null;
-    /* Number of frames analyzed in current packet                      */
+    /* Pointer to NLSF codebook                                         */
+    final int[] input_quality_bands_Q15 = new int[SilkConstants.VAD_N_BANDS];
     int input_tilt_Q15 = 0;
     int SNR_dB_Q7 = 0;
+    /* Quality setting                                                  */
+
+    final byte[] VAD_flags = new byte[SilkConstants.MAX_FRAMES_PER_PACKET];
     byte LBRR_flag = 0;
+    final int[] LBRR_flags = new int[SilkConstants.MAX_FRAMES_PER_PACKET];
+
+    final SideInfoIndices indices = new SideInfoIndices();
+    final byte[] pulses = new byte[SilkConstants.MAX_FRAME_LENGTH];
+
+    /* Input/output buffering */
+    final short[] inputBuf = new short[SilkConstants.MAX_FRAME_LENGTH + 2];
     /* Buffer containing input signal                                   */
     int inputBufIx = 0;
     int nFramesPerPacket = 0;
     int nFramesEncoded = 0;
+    /* Number of frames analyzed in current packet                      */
+
     int nChannelsAPI = 0;
     int nChannelsInternal = 0;
     int channelNb = 0;
+
     /* Parameters For LTP scaling Control */
     int frames_since_onset = 0;
-    /* Counts concecutive nonactive frames, used by DTX                 */
+
     /* Specifically for entropy coding */
     int ec_prevSignalType = 0;
     short ec_prevLagIndex = 0;
+
+    final SilkResamplerState resampler_state = new SilkResamplerState();
+
     /* DTX */
     int useDTX = 0;
     /* Flag to enable DTX                                               */
     int inDTX = 0;
     /* Flag to signal DTX period                                        */
     int noSpeechCounter = 0;
-    /* Inband Low Bitrate Redundancy (LBRR) data */
+    /* Counts concecutive nonactive frames, used by DTX                 */
+
+ /* Inband Low Bitrate Redundancy (LBRR) data */
     int useInBandFEC = 0;
     /* Saves the API setting for query                                  */
     int LBRR_enabled = 0;
     /* Depends on useInBandFRC, bitrate and packet loss rate            */
     int LBRR_GainIncreases = 0;
+    /* Gains increment for coding LBRR frames                           */
+    final SideInfoIndices[] indices_LBRR = new SideInfoIndices[SilkConstants.MAX_FRAMES_PER_PACKET];
+    final byte[][] pulses_LBRR = Arrays.InitTwoDimensionalArrayByte(SilkConstants.MAX_FRAMES_PER_PACKET, SilkConstants.MAX_FRAME_LENGTH);
+
+    /* Noise shaping state */
+    final SilkShapeState sShape = new SilkShapeState();
+
+    /* Prefilter State */
+    final SilkPrefilterState sPrefilt = new SilkPrefilterState();
+
+    /* Buffer for find pitch and noise shape analysis */
+    final short[] x_buf = new short[2 * SilkConstants.MAX_FRAME_LENGTH + SilkConstants.LA_SHAPE_MAX];
+
     /* Normalized correlation from pitch lag estimator */
     int LTPCorr_Q15 = 0;
 
@@ -486,7 +499,7 @@ class SilkChannelEncoder {
             this.TargetRate_bps = 0;
             /* trigger new SNR computation */
 
-            /* Initialize non-zero parameters */
+ /* Initialize non-zero parameters */
             this.prevLag = 100;
             this.first_frame_after_reset = 1;
             this.sPrefilt.lagPrev = 100;
@@ -836,7 +849,6 @@ class SilkChannelEncoder {
      * *************
      */
     /* Encode frame */
-
     /**
      * *************
      */
@@ -976,7 +988,7 @@ class SilkChannelEncoder {
             ec_prevLagIndex_copy = this.ec_prevLagIndex;
             ec_prevSignalType_copy = this.ec_prevSignalType;
             ec_buf_copy = new byte[1275]; // fixme: this size might be optimized to the actual size
-            for (iter = 0; ; iter++) {
+            for (iter = 0;; iter++) {
                 if (gainsID == gainsID_lower) {
                     nBits = nBits_lower;
                 } else if (gainsID == gainsID_upper) {
@@ -1203,7 +1215,7 @@ class SilkChannelEncoder {
             }
 
             /* Decode to get gains in sync with decoder         */
-            /* Overwrite unquantized gains with quantized gains */
+ /* Overwrite unquantized gains with quantized gains */
             BoxedValueByte boxed_gainIndex = new BoxedValueByte(this.LBRRprevLastGainIndex);
             GainQuantization.silk_gains_dequant(thisCtrl.Gains_Q16, psIndices_LBRR.GainsIndices,
                     boxed_gainIndex, condCoding == SilkConstants.CODE_CONDITIONALLY ? 1 : 0, this.nb_subfr);

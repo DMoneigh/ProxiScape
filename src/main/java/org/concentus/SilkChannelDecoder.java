@@ -36,20 +36,10 @@ package org.concentus;
 /// </summary>
 class SilkChannelDecoder {
 
+    int prev_gain_Q16 = 0;
     final int[] exc_Q14 = new int[SilkConstants.MAX_FRAME_LENGTH];
     final int[] sLPC_Q14_buf = new int[SilkConstants.MAX_LPC_ORDER];
     final short[] outBuf = new short[SilkConstants.MAX_FRAME_LENGTH + 2 * SilkConstants.MAX_SUB_FRAME_LENGTH];
-    /* LPC order                                                        */
-    final short[] prevNLSF_Q15 = new short[SilkConstants.MAX_LPC_ORDER];
-    final int[] VAD_flags = new int[SilkConstants.MAX_FRAMES_PER_PACKET];
-    final int[] LBRR_flags = new int[SilkConstants.MAX_FRAMES_PER_PACKET];
-    final SilkResamplerState resampler_state = new SilkResamplerState();
-    /* Quantization indices */
-    final SideInfoIndices indices = new SideInfoIndices();
-    /* CNG state */
-    final CNGState sCNG = new CNGState();
-    final PLCStruct sPLC = new PLCStruct();
-    int prev_gain_Q16 = 0;
     /* Buffer for output signal                     */
     int lagPrev = 0;
     /* Previous Lag                                                     */
@@ -62,31 +52,50 @@ class SilkChannelDecoder {
     int nb_subfr = 0;
     /* Number of 5 ms subframes in a frame                              */
     int frame_length = 0;
-    /* Pointer to iCDF table for pitch contour index                    */
     /* Frame length (samples)                                           */
     int subfr_length = 0;
     /* Subframe length (samples)                                        */
     int ltp_mem_length = 0;
     /* Length of LTP memory                                             */
     int LPC_order = 0;
+    /* LPC order                                                        */
+    final short[] prevNLSF_Q15 = new short[SilkConstants.MAX_LPC_ORDER];
     /* Used to interpolate LSFs                                         */
     int first_frame_after_reset = 0;
     /* Flag for deactivating NLSF interpolation                         */
     short[] pitch_lag_low_bits_iCDF;
     /* Pointer to iCDF table for low bits of pitch lag index            */
     short[] pitch_contour_iCDF;
-    /* For buffering payload in case of more frames per packet */
+    /* Pointer to iCDF table for pitch contour index                    */
+
+ /* For buffering payload in case of more frames per packet */
     int nFramesDecoded = 0;
     int nFramesPerPacket = 0;
+
     /* Specifically for entropy coding */
     int ec_prevSignalType = 0;
-    /* Pointer to NLSF codebook                                         */
     short ec_prevLagIndex = 0;
+
+    final int[] VAD_flags = new int[SilkConstants.MAX_FRAMES_PER_PACKET];
     int LBRR_flag = 0;
+    final int[] LBRR_flags = new int[SilkConstants.MAX_FRAMES_PER_PACKET];
+
+    final SilkResamplerState resampler_state = new SilkResamplerState();
+
     NLSFCodebook psNLSF_CB = null;
+    /* Pointer to NLSF codebook                                         */
+
+ /* Quantization indices */
+    final SideInfoIndices indices = new SideInfoIndices();
+
+    /* CNG state */
+    final CNGState sCNG = new CNGState();
+
     /* Stuff used for PLC */
     int lossCnt = 0;
     int prevSignalType = 0;
+
+    final PLCStruct sPLC = new PLCStruct();
 
     void Reset() {
         prev_gain_Q16 = 0;
@@ -248,7 +257,6 @@ class SilkChannelDecoder {
      * *************
      */
     /* Decode frame */
-
     /**
      * *************
      */

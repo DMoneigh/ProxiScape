@@ -34,19 +34,19 @@ package org.concentus;
 class ApplySineWindow {
 
     /* Apply sine window to signal vector.                                      */
-    /* Window types:                                                            */
-    /*    1 . sine window from 0 to pi/2                                       */
-    /*    2 . sine window from pi/2 to pi                                      */
-    /* Every other sample is linearly interpolated, for speed.                  */
-    /* Window length must be between 16 and 120 (incl) and a multiple of 4.     */
+ /* Window types:                                                            */
+ /*    1 . sine window from 0 to pi/2                                       */
+ /*    2 . sine window from pi/2 to pi                                      */
+ /* Every other sample is linearly interpolated, for speed.                  */
+ /* Window length must be between 16 and 120 (incl) and a multiple of 4.     */
 
-    /* Matlab code for table:
-          for k=16:9*4:16+2*9*4, fprintf(' %7.d,', -round(65536*pi ./ (k:4:k+8*4))); fprintf('\n'); end
-        */
+ /* Matlab code for table:
+       for k=16:9*4:16+2*9*4, fprintf(' %7.d,', -round(65536*pi ./ (k:4:k+8*4))); fprintf('\n'); end
+     */
     private static final short[] freq_table_Q16 = {
-            12111, 9804, 8235, 7100, 6239, 5565, 5022, 4575, 4202,
-            3885, 3612, 3375, 3167, 2984, 2820, 2674, 2542, 2422,
-            2313, 2214, 2123, 2038, 1961, 1889, 1822, 1760, 1702,};
+        12111, 9804, 8235, 7100, 6239, 5565, 5022, 4575, 4202,
+        3885, 3612, 3375, 3167, 2984, 2820, 2674, 2542, 2422,
+        2313, 2214, 2123, 2038, 1961, 1889, 1822, 1760, 1702,};
 
     static void silk_apply_sine_window(
             short[] px_win, /* O    Pointer to windowed signal                                  */
@@ -88,7 +88,7 @@ class ApplySineWindow {
         }
 
         /* Uses the recursive equation:   sin(n*f) = 2 * cos(f) * sin((n-1)*f) - sin((n-2)*f)    */
-        /* 4 samples at a time */
+ /* 4 samples at a time */
         for (k = 0; k < length; k += 4) {
             int pxwk = px_win_ptr + k;
             int pxk = px_ptr + k;

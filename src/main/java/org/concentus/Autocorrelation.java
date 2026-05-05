@@ -33,9 +33,6 @@ package org.concentus;
 
 class Autocorrelation {
 
-    private static final int QC = 10;
-    private static final int QS = 14;
-
     /* Compute autocorrelation */
     static void silk_autocorr(
             int[] results, /* O    Result (length correlationCount)                            */
@@ -201,6 +198,9 @@ class Autocorrelation {
 
         return shift;
     }
+
+    private static final int QC = 10;
+    private static final int QS = 14;
 
     /* Autocorrelations for a warped frequency axis */
     static void silk_warped_autocorrelation(
