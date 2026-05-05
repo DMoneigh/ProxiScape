@@ -156,7 +156,7 @@ class DecodeAPI {
 
         if (lostFlag != DecoderAPIFlag.FLAG_PACKET_LOST && channel_state[0].nFramesDecoded == 0) {
             /* First decoder call for this payload */
- /* Decode VAD flags and LBRR flag */
+            /* Decode VAD flags and LBRR flag */
             for (n = 0; n < decControl.nChannelsInternal; n++) {
                 for (i = 0; i < channel_state[n].nFramesPerPacket; i++) {
                     channel_state[n].VAD_flags[i] = psRangeDec.dec_bit_logp(1);

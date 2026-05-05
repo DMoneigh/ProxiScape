@@ -36,9 +36,11 @@ package org.concentus;
 
 class Pitch {
 
+    private static final int[] second_check = {0, 0, 3, 2, 3, 2, 5, 2, 3, 2, 3, 2, 5, 2, 3, 2};
+
     static void find_best_pitch(int[] xcorr, int[] y, int len,
-            int max_pitch, int[] best_pitch,
-            int yshift, int maxcorr
+                                int max_pitch, int[] best_pitch,
+                                int yshift, int maxcorr
     ) {
         int i, j;
         int Syy = 1;
@@ -85,10 +87,10 @@ class Pitch {
     }
 
     static void celt_fir5(int[] x,
-            int[] num,
-            int[] y,
-            int N,
-            int[] mem) {
+                          int[] num,
+                          int[] y,
+                          int N,
+                          int[] mem) {
         int i;
         int num0, num1, num2, num3, num4;
         int mem0, mem1, mem2, mem3, mem4;
@@ -190,7 +192,7 @@ class Pitch {
 
     // Fixme: remove pointers and optimize
     static void pitch_search(int[] x_lp, int x_lp_ptr, int[] y,
-            int len, int max_pitch, BoxedValueInt pitch) {
+                             int len, int max_pitch, BoxedValueInt pitch) {
         int i, j;
         int lag;
         int[] best_pitch = new int[]{0, 0};
@@ -274,10 +276,8 @@ class Pitch {
         pitch.Val = 2 * best_pitch[0] - offset;
     }
 
-    private static final int[] second_check = {0, 0, 3, 2, 3, 2, 5, 2, 3, 2, 3, 2, 5, 2, 3, 2};
-
     static int remove_doubling(int[] x, int maxperiod, int minperiod,
-            int N, BoxedValueInt T0_, int prev_period, int prev_gain) {
+                               int N, BoxedValueInt T0_, int prev_period, int prev_gain) {
         int k, i, T, T0;
         int g, g0;
         int pg;

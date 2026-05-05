@@ -161,7 +161,14 @@ public class Speaker extends Thread {
             while (running) {
                 Object[] soundPacket = locationalSoundPackets.poll(10, TimeUnit.MILLISECONDS);
 
-                if (soundPacket == null || spkr == null || soundPacket[5] != ProxiScapePlugin.PLAYER_INFO[5])
+                //TODO add check ignore list
+                if (
+                        soundPacket == null ||
+                                spkr == null ||
+                                soundPacket[2] != ProxiScapePlugin.PLAYER_INFO[2] ||
+                                soundPacket[5] != ProxiScapePlugin.PLAYER_INFO[5] ||
+                                soundManager.getVoiceClient().getPlugin().isPlayerIgnored((String) soundPacket[1])
+                )
                     continue;
 
                 byte[] opusData = (byte[]) soundPacket[0];
@@ -197,7 +204,7 @@ public class Speaker extends Thread {
 
                 spkr.write(pcmBytes, 0, decoded * 2);
 
-                //TODO Draw mic over head of who is talking
+                soundManager.getVoiceClient().getPlugin().getOverlay().spoke((String) soundPacket[1]);
 
             }
         } catch (InterruptedException | OpusException | LineUnavailableException e) {

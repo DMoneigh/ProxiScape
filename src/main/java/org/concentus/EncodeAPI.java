@@ -96,7 +96,7 @@ class EncodeAPI {
     /// <summary>
     /// Encode frame with Silk
     /// Note: if prefillFlag is set, the input must contain 10 ms of audio, irrespective of what
-    /// encControl.payloadSize_ms is set to  
+    /// encControl.payloadSize_ms is set to
     /// </summary>
     /// <param name="psEnc">I/O  State</param>
     /// <param name="encControl">I    Control status</param>
@@ -226,7 +226,7 @@ class EncodeAPI {
         nSamplesFromInputMax
                 = Inlines.silk_DIV32_16(nSamplesToBufferMax
                         * psEnc.state_Fxx[0].API_fs_Hz,
-                        (short) (psEnc.state_Fxx[0].fs_kHz * 1000));
+                (short) (psEnc.state_Fxx[0].fs_kHz * 1000));
 
         buf = new short[nSamplesFromInputMax];
 
@@ -301,7 +301,7 @@ class EncodeAPI {
                     for (n = 0; n < psEnc.state_Fxx[0].frame_length; n++) {
                         psEnc.state_Fxx[0].inputBuf[psEnc.state_Fxx[0].inputBufIx + n + 2]
                                 = (short) (Inlines.silk_RSHIFT(psEnc.state_Fxx[0].inputBuf[psEnc.state_Fxx[0].inputBufIx + n + 2]
-                                        + psEnc.state_Fxx[1].inputBuf[psEnc.state_Fxx[1].inputBufIx + n + 2], 1));
+                                + psEnc.state_Fxx[1].inputBuf[psEnc.state_Fxx[1].inputBufIx + n + 2], 1));
                     }
                 }
 
@@ -340,7 +340,7 @@ class EncodeAPI {
                     psRangeEnc.enc_icdf(0, iCDF, 8);
 
                     /* Encode any LBRR data from previous packet */
- /* Encode LBRR flags */
+                    /* Encode LBRR flags */
                     for (n = 0; n < encControl.nChannelsInternal; n++) {
                         LBRR_symbol = 0;
                         for (i = 0; i < psEnc.state_Fxx[n].nFramesPerPacket; i++) {

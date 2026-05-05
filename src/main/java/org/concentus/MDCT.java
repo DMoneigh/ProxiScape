@@ -38,7 +38,7 @@ class MDCT {
 
     /* Forward MDCT trashes the input array */
     static void clt_mdct_forward(MDCTLookup l, int[] input, int input_ptr, int[] output, int output_ptr,
-            int[] window, int overlap, int shift, int stride) {
+                                 int[] window, int overlap, int shift, int stride) {
         int i;
         int N, N2, N4;
         int[] f;
@@ -64,7 +64,7 @@ class MDCT {
         f2 = new int[N4 * 2];
 
         /* Consider the input to be composed of four blocks: [a, b, c, d] */
- /* Window, shuffle, fold */
+        /* Window, shuffle, fold */
         {
             /* Temp pointers to make it really clear to the compiler what we're doing */
             int xp1 = input_ptr + (overlap >> 1);
@@ -142,7 +142,7 @@ class MDCT {
     }
 
     static void clt_mdct_backward(MDCTLookup l, int[] input, int input_ptr, int[] output, int output_ptr,
-            int[] window, int overlap, int shift, int stride) {
+                                  int[] window, int overlap, int shift, int stride) {
         int i;
         int N, N2, N4;
         int trig = 0;
@@ -157,7 +157,7 @@ class MDCT {
         N4 = N >> 2;
 
         /* Pre-rotate */
- /* Temp pointers to make it really clear to the compiler what we're doing */
+        /* Temp pointers to make it really clear to the compiler what we're doing */
         xp2 = input_ptr + (stride * (N2 - 1));
         yp = output_ptr + (overlap >> 1);
         short[] bitrev = l.kfft[shift].bitrev;

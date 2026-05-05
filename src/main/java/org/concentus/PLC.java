@@ -95,6 +95,7 @@ class PLC {
      * ***********************************************
      */
     /* Update state of PLC                            */
+
     /**
      * ***********************************************
      */
@@ -168,7 +169,7 @@ class PLC {
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="energy1">O</param>
     /// <param name="shift1">O</param>
@@ -192,7 +193,7 @@ class PLC {
         short[] exc_buf = new short[2 * subfr_length];
 
         /* Find random noise component */
- /* Scale previous excitation signal */
+        /* Scale previous excitation signal */
         for (k = 0; k < 2; k++) {
             for (i = 0; i < subfr_length; i++) {
                 exc_buf[exc_buf_ptr + i] = (short) Inlines.silk_SAT16(Inlines.silk_RSHIFT(
@@ -315,7 +316,7 @@ class PLC {
             pred_lag_ptr = sLTP_buf_idx - lag + SilkConstants.LTP_ORDER / 2;
             for (i = 0; i < psDec.subfr_length; i++) {
                 /* Unrolled loop */
- /* Avoids introducing a bias because Inlines.silk_SMLAWB() always rounds to -inf */
+                /* Avoids introducing a bias because Inlines.silk_SMLAWB() always rounds to -inf */
                 LTP_pred_Q12 = 2;
                 LTP_pred_Q12 = Inlines.silk_SMLAWB(LTP_pred_Q12, sLTP_Q14[pred_lag_ptr], B_Q14[0]);
                 LTP_pred_Q12 = Inlines.silk_SMLAWB(LTP_pred_Q12, sLTP_Q14[pred_lag_ptr - 1], B_Q14[1]);

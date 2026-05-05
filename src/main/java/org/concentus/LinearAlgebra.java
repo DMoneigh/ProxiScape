@@ -57,14 +57,14 @@ class LinearAlgebra {
          * *************************************************
          * Factorize A by LDL such that A = L*D*L', where L is lower triangular
          * with ones on diagonal
-        ***************************************************
+         ***************************************************
          */
         silk_LDL_factorize(A, A_ptr, M, L_Q16, inv_D);
 
         /**
          * **************************************************
          * substitute D*L'*x = Y. ie: L*D*L'*x = b => L*Y = b <=> Y = inv(L)*b
-        *****************************************************
+         *****************************************************
          */
         silk_LS_SolveFirst(L_Q16, M, b, Y);
 
@@ -72,14 +72,14 @@ class LinearAlgebra {
          * **************************************************
          * D*L'*x = Y <=> L'*x = inv(D)*Y, because D is diagonal just multiply
          * with 1/d_i
-        ***************************************************
+         ***************************************************
          */
         silk_LS_divide_Q16(Y, inv_D, M);
 
         /**
          * **************************************************
          * x = inv(L') * inv(D) * Y
-        ****************************************************
+         ****************************************************
          */
         silk_LS_SolveLast(L_Q16, M, Y, x_Q16);
 
@@ -135,7 +135,7 @@ class LinearAlgebra {
                 D_Q0[j] = tmp_32;
                 /* always < max(Correlation) */
 
- /* two-step division */
+                /* two-step division */
                 one_div_diag_Q36 = Inlines.silk_INVERSE32_varQ(tmp_32, 36);
                 /* Q36 */
                 one_div_diag_Q40 = Inlines.silk_LSHIFT(one_div_diag_Q36, 4);
@@ -145,7 +145,7 @@ class LinearAlgebra {
                 one_div_diag_Q48 = Inlines.silk_SMULWW(err, one_div_diag_Q40);
                 /* Q48 */
 
- /* Save 1/Ds */
+                /* Save 1/Ds */
                 inv_D[(j * 2) + 0] = one_div_diag_Q36;
                 inv_D[(j * 2) + 1] = one_div_diag_Q48;
 
@@ -164,7 +164,7 @@ class LinearAlgebra {
                     tmp_32 = Inlines.silk_SUB32(scratch1[scratch1_ptr + i], tmp_32);
                     /* always < max(Correlation) */
 
- /* tmp_32 / D_Q0[j] : Divide to Q16 */
+                    /* tmp_32 / D_Q0[j] : Divide to Q16 */
                     Inlines.MatrixSet(L_Q16, i, j, M, Inlines.silk_ADD32(Inlines.silk_SMMUL(tmp_32, one_div_diag_Q48),
                             Inlines.silk_RSHIFT(Inlines.silk_SMULWW(tmp_32, one_div_diag_Q36), 4)));
 

@@ -46,6 +46,94 @@ public class OpusMSDecoder {
         }
     }
 
+    /// <summary>
+    /// Creates a new MS decoder
+    /// </summary>
+    /// <param name="Fs"></param>
+    /// <param name="channels"></param>
+    /// <param name="streams"></param>
+    /// <param name="coupled_streams"></param>
+    /// <param name="mapping">A mapping family (just use { 0, 1, 255 })</param>
+    /// <returns></returns>
+    public static OpusMSDecoder create(
+            int Fs,
+            int channels,
+            int streams,
+            int coupled_streams,
+            short[] mapping) throws OpusException {
+        int ret;
+        OpusMSDecoder st;
+        if ((channels > 255) || (channels < 1) || (coupled_streams > streams)
+                || (streams < 1) || (coupled_streams < 0) || (streams > 255 - coupled_streams)) {
+            throw new IllegalArgumentException("Invalid channel / stream configuration");
+        }
+        st = new OpusMSDecoder(streams, coupled_streams);
+        ret = st.opus_multistream_decoder_init(Fs, channels, streams, coupled_streams, mapping);
+        if (ret != OpusError.OPUS_OK) {
+            if (ret == OpusError.OPUS_BAD_ARG) {
+                throw new IllegalArgumentException("Bad argument while creating MS decoder");
+            }
+            throw new OpusException("Could not create MS decoder", ret);
+        }
+        return st;
+    }
+
+    static int opus_multistream_packet_validate(byte[] data, int data_ptr,
+                                                int len, int nb_streams, int Fs) {
+        int s;
+        int count;
+        BoxedValueByte toc = new BoxedValueByte((byte) 0);
+        short[] size = new short[48];
+        int samples = 0;
+        BoxedValueInt packet_offset = new BoxedValueInt(0);
+        BoxedValueInt dummy = new BoxedValueInt(0);
+
+        for (s = 0; s < nb_streams; s++) {
+            int tmp_samples;
+            if (len <= 0) {
+                return OpusError.OPUS_INVALID_PACKET;
+            }
+
+            count = OpusPacketInfo.opus_packet_parse_impl(data, data_ptr, len, (s != nb_streams - 1) ? 1 : 0, toc, null, 0,
+                    size, 0, dummy, packet_offset);
+            if (count < 0) {
+                return count;
+            }
+
+            tmp_samples = OpusPacketInfo.getNumSamples(data, data_ptr, packet_offset.Val, Fs);
+            if (s != 0 && samples != tmp_samples) {
+                return OpusError.OPUS_INVALID_PACKET;
+            }
+            samples = tmp_samples;
+            data_ptr += packet_offset.Val;
+            len -= packet_offset.Val;
+        }
+
+        return samples;
+    }
+
+    static void opus_copy_channel_out_short(
+            short[] dst,
+            int dst_ptr,
+            int dst_stride,
+            int dst_channel,
+            short[] src,
+            int src_ptr,
+            int src_stride,
+            int frame_size
+    ) {
+        int i;
+        if (src != null) {
+            for (i = 0; i < frame_size; i++) {
+                dst[i * dst_stride + dst_channel + dst_ptr] = src[i * src_stride + src_ptr];
+            }
+        } else {
+            for (i = 0; i < frame_size; i++) {
+                dst[i * dst_stride + dst_channel + dst_ptr] = 0;
+            }
+        }
+    }
+
     int opus_multistream_decoder_init(
             int Fs,
             int channels,
@@ -87,72 +175,6 @@ public class OpusMSDecoder {
             decoder_ptr++;
         }
         return OpusError.OPUS_OK;
-    }
-
-    /// <summary>
-    /// Creates a new MS decoder
-    /// </summary>
-    /// <param name="Fs"></param>
-    /// <param name="channels"></param>
-    /// <param name="streams"></param>
-    /// <param name="coupled_streams"></param>
-    /// <param name="mapping">A mapping family (just use { 0, 1, 255 })</param>
-    /// <returns></returns>
-    public static OpusMSDecoder create(
-            int Fs,
-            int channels,
-            int streams,
-            int coupled_streams,
-            short[] mapping) throws OpusException {
-        int ret;
-        OpusMSDecoder st;
-        if ((channels > 255) || (channels < 1) || (coupled_streams > streams)
-                || (streams < 1) || (coupled_streams < 0) || (streams > 255 - coupled_streams)) {
-            throw new IllegalArgumentException("Invalid channel / stream configuration");
-        }
-        st = new OpusMSDecoder(streams, coupled_streams);
-        ret = st.opus_multistream_decoder_init(Fs, channels, streams, coupled_streams, mapping);
-        if (ret != OpusError.OPUS_OK) {
-            if (ret == OpusError.OPUS_BAD_ARG) {
-                throw new IllegalArgumentException("Bad argument while creating MS decoder");
-            }
-            throw new OpusException("Could not create MS decoder", ret);
-        }
-        return st;
-    }
-
-    static int opus_multistream_packet_validate(byte[] data, int data_ptr,
-            int len, int nb_streams, int Fs) {
-        int s;
-        int count;
-        BoxedValueByte toc = new BoxedValueByte((byte) 0);
-        short[] size = new short[48];
-        int samples = 0;
-        BoxedValueInt packet_offset = new BoxedValueInt(0);
-        BoxedValueInt dummy = new BoxedValueInt(0);
-
-        for (s = 0; s < nb_streams; s++) {
-            int tmp_samples;
-            if (len <= 0) {
-                return OpusError.OPUS_INVALID_PACKET;
-            }
-
-            count = OpusPacketInfo.opus_packet_parse_impl(data, data_ptr, len, (s != nb_streams - 1) ? 1 : 0, toc, null, 0,
-                    size, 0, dummy, packet_offset);
-            if (count < 0) {
-                return count;
-            }
-
-            tmp_samples = OpusPacketInfo.getNumSamples(data, data_ptr, packet_offset.Val, Fs);
-            if (s != 0 && samples != tmp_samples) {
-                return OpusError.OPUS_INVALID_PACKET;
-            }
-            samples = tmp_samples;
-            data_ptr += packet_offset.Val;
-            len -= packet_offset.Val;
-        }
-
-        return samples;
     }
 
     int opus_multistream_decode_native(
@@ -249,28 +271,6 @@ public class OpusMSDecoder {
         }
 
         return frame_size;
-    }
-
-    static void opus_copy_channel_out_short(
-            short[] dst,
-            int dst_ptr,
-            int dst_stride,
-            int dst_channel,
-            short[] src,
-            int src_ptr,
-            int src_stride,
-            int frame_size
-    ) {
-        int i;
-        if (src != null) {
-            for (i = 0; i < frame_size; i++) {
-                dst[i * dst_stride + dst_channel + dst_ptr] = src[i * src_stride + src_ptr];
-            }
-        } else {
-            for (i = 0; i < frame_size; i++) {
-                dst[i * dst_stride + dst_channel + dst_ptr] = 0;
-            }
-        }
     }
 
     public int decodeMultistream(

@@ -39,16 +39,15 @@ package org.concentus;
 /// </summary>
 class CeltDecoder {
 
+    final int[] preemph_memD = new int[2];
     CeltMode mode = null;
     int overlap = 0;
     int channels = 0;
     int stream_channels = 0;
-
     int downsample = 0;
     int start = 0;
     int end = 0;
     int signalling = 0;
-
     /* Everything beyond this point gets cleared on a reset */
     int rng = 0;
     int error = 0;
@@ -60,9 +59,6 @@ class CeltDecoder {
     int postfilter_gain_old = 0;
     int postfilter_tapset = 0;
     int postfilter_tapset_old = 0;
-
-    final int[] preemph_memD = new int[2];
-
     /// <summary>
     /// Scratch space used by the decoder. It is actually a variable-sized
     /// field that resulted in a variable-sized struct. There are 6 distinct regions inside.
@@ -361,7 +357,7 @@ class CeltDecoder {
                     }
                     buf[CeltConstants.DECODE_BUFFER_SIZE - N + i]
                             = Inlines.SHL32((Inlines.MULT16_16_Q15(attenuation,
-                                    exc[extrapolation_offset + j])), CeltConstants.SIG_SHIFT);
+                            exc[extrapolation_offset + j])), CeltConstants.SIG_SHIFT);
                     /* Compute the energy of the previously decoded signal whose
                        excitation we're copying. */
                     tmp = Inlines.ROUND16(
@@ -435,7 +431,7 @@ class CeltDecoder {
     }
 
     int celt_decode_with_ec(byte[] data, int data_ptr,
-            int len, short[] pcm, int pcm_ptr, int frame_size, EntropyCoder dec, int accum) {
+                            int len, short[] pcm, int pcm_ptr, int frame_size, EntropyCoder dec, int accum) {
         int c, i, N;
         int spread_decision;
         int bits;

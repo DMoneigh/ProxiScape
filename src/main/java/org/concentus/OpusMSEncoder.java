@@ -36,13 +36,20 @@ package org.concentus;
 
 public class OpusMSEncoder {
 
+    private static final int[] diff_table/*[17]*/ = {
+            ((short) (0.5 + (0.5000000f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.5000000f, CeltConstants.DB_SHIFT)*/, ((short) (0.5 + (0.2924813f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.2924813f, CeltConstants.DB_SHIFT)*/, ((short) (0.5 + (0.1609640f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.1609640f, CeltConstants.DB_SHIFT)*/, ((short) (0.5 + (0.0849625f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.0849625f, CeltConstants.DB_SHIFT)*/,
+            ((short) (0.5 + (0.0437314f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.0437314f, CeltConstants.DB_SHIFT)*/, ((short) (0.5 + (0.0221971f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.0221971f, CeltConstants.DB_SHIFT)*/, ((short) (0.5 + (0.0111839f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.0111839f, CeltConstants.DB_SHIFT)*/, ((short) (0.5 + (0.0056136f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.0056136f, CeltConstants.DB_SHIFT)*/,
+            ((short) (0.5 + (0.0028123f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.0028123f, CeltConstants.DB_SHIFT)*/,
+            0, 0, 0, 0, 0, 0, 0, 0};
     final ChannelLayout layout = new ChannelLayout();
+    final float[] subframe_mem = new float[3];
+    /* Max size in case the encoder decides to return three frames */
+    private final int MS_FRAME_TMP = (3 * 1275 + 7);
     int lfe_stream = 0;
     OpusApplication application = OpusApplication.OPUS_APPLICATION_AUDIO;
     OpusFramesize variable_duration = OpusFramesize.OPUS_FRAMESIZE_UNKNOWN;
     int surround = 0;
     int bitrate_bps = 0;
-    final float[] subframe_mem = new float[3];
     OpusEncoder[] encoders = null;
     int[] window_mem = null;
     int[] preemph_mem = null;
@@ -56,24 +63,10 @@ public class OpusMSEncoder {
         for (int c = 0; c < nb_streams; c++) {
             encoders[c] = new OpusEncoder();
         }
-        
+
         int nb_channels = (nb_coupled_streams * 2) /*stereo channels*/ + (nb_streams - nb_coupled_streams) /*mono channels*/;
         window_mem = new int[nb_channels * 120];
         preemph_mem = new int[nb_channels];
-    }
-
-    public void resetState() {
-        int s;
-        subframe_mem[0] = subframe_mem[1] = subframe_mem[2] = 0;
-        if (surround != 0) {
-            Arrays.MemSet(preemph_mem, 0, layout.nb_channels);
-            Arrays.MemSet(window_mem, 0, layout.nb_channels * 120);
-        }
-        int encoder_ptr = 0;
-        for (s = 0; s < layout.nb_streams; s++) {
-            OpusEncoder enc = encoders[encoder_ptr++];
-            enc.resetState();
-        }
     }
 
     static int validate_encoder_layout(ChannelLayout layout) {
@@ -127,12 +120,6 @@ public class OpusMSEncoder {
         }
     }
 
-    private static final int[] diff_table/*[17]*/ = {
-                ((short) (0.5 + (0.5000000f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.5000000f, CeltConstants.DB_SHIFT)*/, ((short) (0.5 + (0.2924813f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.2924813f, CeltConstants.DB_SHIFT)*/, ((short) (0.5 + (0.1609640f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.1609640f, CeltConstants.DB_SHIFT)*/, ((short) (0.5 + (0.0849625f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.0849625f, CeltConstants.DB_SHIFT)*/,
-                ((short) (0.5 + (0.0437314f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.0437314f, CeltConstants.DB_SHIFT)*/, ((short) (0.5 + (0.0221971f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.0221971f, CeltConstants.DB_SHIFT)*/, ((short) (0.5 + (0.0111839f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.0111839f, CeltConstants.DB_SHIFT)*/, ((short) (0.5 + (0.0056136f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.0056136f, CeltConstants.DB_SHIFT)*/,
-                ((short) (0.5 + (0.0028123f) * (((int) 1) << (CeltConstants.DB_SHIFT))))/*Inlines.QCONST16(0.0028123f, CeltConstants.DB_SHIFT)*/,
-                0, 0, 0, 0, 0, 0, 0, 0};
-
     /* Computes a rough approximation of log2(2^a + 2^b) */
     static int logSum(int a, int b) {
         int max;
@@ -161,8 +148,8 @@ public class OpusMSEncoder {
     //    return log2(pow(4, a) + pow(4, b)) / 2;
     //}
     static void surround_analysis(CeltMode celt_mode, short[] pcm, int pcm_ptr,
-            int[] bandLogE, int[] mem, int[] preemph_mem,
-            int len, int overlap, int channels, int rate
+                                  int[] bandLogE, int[] mem, int[] preemph_mem,
+                                  int len, int overlap, int channels, int rate
     ) {
         int c;
         int i;
@@ -272,6 +259,112 @@ public class OpusMSEncoder {
                     bandLogE[21 * c + i] = 0;
                 }
             }
+        }
+    }
+
+    public static OpusMSEncoder Create(
+            int Fs,
+            int channels,
+            int streams,
+            int coupled_streams,
+            short[] mapping,
+            OpusApplication application
+    ) throws OpusException {
+        int ret;
+        OpusMSEncoder st;
+        if ((channels > 255) || (channels < 1) || (coupled_streams > streams)
+                || (streams < 1) || (coupled_streams < 0) || (streams > 255 - coupled_streams)) {
+            throw new IllegalArgumentException("Invalid channel / stream configuration");
+        }
+        st = new OpusMSEncoder(streams, coupled_streams);
+        ret = st.opus_multistream_encoder_init(Fs, channels, streams, coupled_streams, mapping, application, 0);
+        if (ret != OpusError.OPUS_OK) {
+            if (ret == OpusError.OPUS_BAD_ARG) {
+                throw new IllegalArgumentException("OPUS_BAD_ARG when creating MS encoder");
+            }
+            throw new OpusException("Could not create MS encoder", ret);
+        }
+        return st;
+    }
+
+    static void GetStreamCount(int channels, int mapping_family, BoxedValueInt nb_streams, BoxedValueInt nb_coupled_streams) {
+        if (mapping_family == 0) {
+            if (channels == 1) {
+                nb_streams.Val = 1;
+                nb_coupled_streams.Val = 0;
+            } else if (channels == 2) {
+                nb_streams.Val = 1;
+                nb_coupled_streams.Val = 1;
+            } else {
+                throw new IllegalArgumentException("More than 2 channels requires custom mappings");
+            }
+        } else if (mapping_family == 1 && channels <= 8 && channels >= 1) {
+            nb_streams.Val = VorbisLayout.vorbis_mappings[channels - 1].nb_streams;
+            nb_coupled_streams.Val = VorbisLayout.vorbis_mappings[channels - 1].nb_coupled_streams;
+        } else if (mapping_family == 255) {
+            nb_streams.Val = channels;
+            nb_coupled_streams.Val = 0;
+        } else {
+            throw new IllegalArgumentException("Invalid mapping family");
+        }
+    }
+
+    public static OpusMSEncoder CreateSurround(
+            int Fs,
+            int channels,
+            int mapping_family,
+            BoxedValueInt streams,
+            BoxedValueInt coupled_streams,
+            short[] mapping,
+            OpusApplication application
+    ) throws OpusException {
+        int ret;
+        OpusMSEncoder st;
+        if ((channels > 255) || (channels < 1) || application == OpusApplication.OPUS_APPLICATION_UNIMPLEMENTED) {
+            throw new IllegalArgumentException("Invalid channel count or application");
+        }
+        BoxedValueInt nb_streams = new BoxedValueInt(0);
+        BoxedValueInt nb_coupled_streams = new BoxedValueInt(0);
+        GetStreamCount(channels, mapping_family, nb_streams, nb_coupled_streams);
+
+        st = new OpusMSEncoder(nb_streams.Val, nb_coupled_streams.Val);
+        ret = st.opus_multistream_surround_encoder_init(Fs, channels, mapping_family, streams, coupled_streams, mapping, application);
+        if (ret != OpusError.OPUS_OK) {
+            if (ret == OpusError.OPUS_BAD_ARG) {
+                throw new IllegalArgumentException("Bad argument passed to CreateSurround");
+            }
+            throw new OpusException("Could not create multistream encoder", ret);
+        }
+        return st;
+    }
+
+    static void opus_copy_channel_in_short(
+            short[] dst,
+            int dst_ptr,
+            int dst_stride,
+            short[] src,
+            int src_ptr,
+            int src_stride,
+            int src_channel,
+            int frame_size
+    ) {
+        int i;
+        for (i = 0; i < frame_size; i++) {
+            dst[dst_ptr + i * dst_stride] = src[i * src_stride + src_channel + src_ptr];
+        }
+    }
+
+    public void resetState() {
+        int s;
+        subframe_mem[0] = subframe_mem[1] = subframe_mem[2] = 0;
+        if (surround != 0) {
+            Arrays.MemSet(preemph_mem, 0, layout.nb_channels);
+            Arrays.MemSet(window_mem, 0, layout.nb_channels * 120);
+        }
+        int encoder_ptr = 0;
+        for (s = 0; s < layout.nb_streams; s++) {
+            OpusEncoder enc = encoders[encoder_ptr++];
+            enc.resetState();
         }
     }
 
@@ -391,82 +484,6 @@ public class OpusMSEncoder {
                 mapping, application, (channels > 2 && mapping_family == 1) ? 1 : 0);
     }
 
-    public static OpusMSEncoder Create(
-            int Fs,
-            int channels,
-            int streams,
-            int coupled_streams,
-            short[] mapping,
-            OpusApplication application
-    ) throws OpusException {
-        int ret;
-        OpusMSEncoder st;
-        if ((channels > 255) || (channels < 1) || (coupled_streams > streams)
-                || (streams < 1) || (coupled_streams < 0) || (streams > 255 - coupled_streams)) {
-            throw new IllegalArgumentException("Invalid channel / stream configuration");
-        }
-        st = new OpusMSEncoder(streams, coupled_streams);
-        ret = st.opus_multistream_encoder_init(Fs, channels, streams, coupled_streams, mapping, application, 0);
-        if (ret != OpusError.OPUS_OK) {
-            if (ret == OpusError.OPUS_BAD_ARG) {
-                throw new IllegalArgumentException("OPUS_BAD_ARG when creating MS encoder");
-            }
-            throw new OpusException("Could not create MS encoder", ret);
-        }
-        return st;
-    }
-
-    static void GetStreamCount(int channels, int mapping_family, BoxedValueInt nb_streams, BoxedValueInt nb_coupled_streams) {
-        if (mapping_family == 0) {
-            if (channels == 1) {
-                nb_streams.Val = 1;
-                nb_coupled_streams.Val = 0;
-            } else if (channels == 2) {
-                nb_streams.Val = 1;
-                nb_coupled_streams.Val = 1;
-            } else {
-                throw new IllegalArgumentException("More than 2 channels requires custom mappings");
-            }
-        } else if (mapping_family == 1 && channels <= 8 && channels >= 1) {
-            nb_streams.Val = VorbisLayout.vorbis_mappings[channels - 1].nb_streams;
-            nb_coupled_streams.Val = VorbisLayout.vorbis_mappings[channels - 1].nb_coupled_streams;
-        } else if (mapping_family == 255) {
-            nb_streams.Val = channels;
-            nb_coupled_streams.Val = 0;
-        } else {
-            throw new IllegalArgumentException("Invalid mapping family");
-        }
-    }
-
-    public static OpusMSEncoder CreateSurround(
-            int Fs,
-            int channels,
-            int mapping_family,
-            BoxedValueInt streams,
-            BoxedValueInt coupled_streams,
-            short[] mapping,
-            OpusApplication application
-    ) throws OpusException {
-        int ret;
-        OpusMSEncoder st;
-        if ((channels > 255) || (channels < 1) || application == OpusApplication.OPUS_APPLICATION_UNIMPLEMENTED) {
-            throw new IllegalArgumentException("Invalid channel count or application");
-        }
-        BoxedValueInt nb_streams = new BoxedValueInt(0);
-        BoxedValueInt nb_coupled_streams = new BoxedValueInt(0);
-        GetStreamCount(channels, mapping_family, nb_streams, nb_coupled_streams);
-
-        st = new OpusMSEncoder(nb_streams.Val, nb_coupled_streams.Val);
-        ret = st.opus_multistream_surround_encoder_init(Fs, channels, mapping_family, streams, coupled_streams, mapping, application);
-        if (ret != OpusError.OPUS_OK) {
-            if (ret == OpusError.OPUS_BAD_ARG) {
-                throw new IllegalArgumentException("Bad argument passed to CreateSurround");
-            }
-            throw new OpusException("Could not create multistream encoder", ret);
-        }
-        return st;
-    }
-
     int surround_rate_allocation(
             int[] out_rates,
             int frame_size
@@ -494,7 +511,7 @@ public class OpusMSEncoder {
         stream_offset += 60 * (Fs / frame_size - 50);
         /* We start by giving each stream (coupled or uncoupled) the same bitrate.
            This models the main saving of coupled channels over uncoupled. */
- /* The LFE stream is an exception to the above and gets fewer bits. */
+        /* The LFE stream is an exception to the above and gets fewer bits. */
         lfe_offset = 3500 + 60 * (Fs / frame_size - 50);
         /* Coupled streams get twice the mono rate after the first 20 kb/s. */
         coupled_ratio = 512;
@@ -533,9 +550,6 @@ public class OpusMSEncoder {
         }
         return rate_sum;
     }
-
-    /* Max size in case the encoder decides to return three frames */
-    private final int MS_FRAME_TMP = (3 * 1275 + 7);
 
     int opus_multistream_encode_native(
             short[] pcm,
@@ -724,22 +738,6 @@ public class OpusMSEncoder {
         }
 
         return tot_size;
-    }
-
-    static void opus_copy_channel_in_short(
-            short[] dst,
-            int dst_ptr,
-            int dst_stride,
-            short[] src,
-            int src_ptr,
-            int src_stride,
-            int src_channel,
-            int frame_size
-    ) {
-        int i;
-        for (i = 0; i < frame_size; i++) {
-            dst[dst_ptr + i * dst_stride] = src[i * src_stride + src_channel + src_ptr];
-        }
     }
 
     public int encodeMultistream(

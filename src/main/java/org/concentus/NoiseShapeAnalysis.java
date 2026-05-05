@@ -34,9 +34,9 @@ package org.concentus;
 class NoiseShapeAnalysis {
 
     /* Compute gain to make warped filter coefficients have a zero mean log frequency response on a   */
- /* non-warped frequency scale. (So that it can be implemented with a minimum-phase monic filter.) */
- /* Note: A monic filter is one with the first coefficient equal to 1.0. In Silk we omit the first */
- /* coefficient in an array of coefficients, for monic filters.                                    */
+    /* non-warped frequency scale. (So that it can be implemented with a minimum-phase monic filter.) */
+    /* Note: A monic filter is one with the first coefficient equal to 1.0. In Silk we omit the first */
+    /* coefficient in an array of coefficients, for monic filters.                                    */
     static int warped_gain( /* gain in Q16*/
             int[] coefs_Q24,
             int lambda_Q16,
@@ -55,7 +55,7 @@ class NoiseShapeAnalysis {
     }
 
     /* Convert warped filter coefficients to monic pseudo-warped coefficients and limit maximum     */
- /* amplitude of monic warped coefficients by using bandwidth expansion on the true coefficients */
+    /* amplitude of monic warped coefficients by using bandwidth expansion on the true coefficients */
     static void limit_warped_coefs(
             int[] coefs_syn_Q24,
             int[] coefs_ana_Q24,
@@ -113,8 +113,8 @@ class NoiseShapeAnalysis {
 
             /* Apply bandwidth expansion */
             chirp_Q16 = ((int) ((0.99f) * ((long) 1 << (16)) + 0.5))/*Inlines.SILK_CONST(0.99f, 16)*/ - Inlines.silk_DIV32_varQ(
-                            Inlines.silk_SMULWB(maxabs_Q24 - limit_Q24, Inlines.silk_SMLABB(((int) ((0.8f) * ((long) 1 << (10)) + 0.5))/*Inlines.SILK_CONST(0.8f, 10)*/, ((int) ((0.1f) * ((long) 1 << (10)) + 0.5))/*Inlines.SILK_CONST(0.1f, 10)*/, iter)),
-                            Inlines.silk_MUL(maxabs_Q24, ind + 1), 22);
+                    Inlines.silk_SMULWB(maxabs_Q24 - limit_Q24, Inlines.silk_SMLABB(((int) ((0.8f) * ((long) 1 << (10)) + 0.5))/*Inlines.SILK_CONST(0.8f, 10)*/, ((int) ((0.1f) * ((long) 1 << (10)) + 0.5))/*Inlines.SILK_CONST(0.1f, 10)*/, iter)),
+                    Inlines.silk_MUL(maxabs_Q24, ind + 1), 22);
             BWExpander.silk_bwexpander_32(coefs_syn_Q24, order, chirp_Q16);
             BWExpander.silk_bwexpander_32(coefs_ana_Q24, order, chirp_Q16);
 
@@ -142,6 +142,7 @@ class NoiseShapeAnalysis {
      * ***********************************************************
      */
     /* Compute noise shaping coefficients and initial gain values */
+
     /**
      * ***********************************************************
      */
@@ -397,7 +398,7 @@ class NoiseShapeAnalysis {
         }
 
         gain_mult_Q16 = ((int) ((1.0f) * ((long) 1 << (16)) + 0.5))/*Inlines.SILK_CONST(1.0f, 16)*/ + Inlines.silk_RSHIFT_ROUND(Inlines.silk_MLA(((int) ((TuningParameters.INPUT_TILT) * ((long) 1 << (26)) + 0.5))/*Inlines.SILK_CONST(TuningParameters.INPUT_TILT, 26)*/,
-                        psEncCtrl.coding_quality_Q14, ((int) ((TuningParameters.HIGH_RATE_INPUT_TILT) * ((long) 1 << (12)) + 0.5))/*Inlines.SILK_CONST(TuningParameters.HIGH_RATE_INPUT_TILT, 12)*/), 10);
+                psEncCtrl.coding_quality_Q14, ((int) ((TuningParameters.HIGH_RATE_INPUT_TILT) * ((long) 1 << (12)) + 0.5))/*Inlines.SILK_CONST(TuningParameters.HIGH_RATE_INPUT_TILT, 12)*/), 10);
         for (k = 0; k < psEnc.nb_subfr; k++) {
             psEncCtrl.GainsPre_Q14[k] = Inlines.silk_SMULWB(gain_mult_Q16, psEncCtrl.GainsPre_Q14[k]);
         }
@@ -411,11 +412,11 @@ class NoiseShapeAnalysis {
          */
         /* Less low frequency shaping for noisy inputs */
         strength_Q16 = Inlines.silk_MUL(((int) ((TuningParameters.LOW_FREQ_SHAPING) * ((long) 1 << (4)) + 0.5))/*Inlines.SILK_CONST(TuningParameters.LOW_FREQ_SHAPING, 4)*/, Inlines.silk_SMLAWB(((int) ((1.0f) * ((long) 1 << (12)) + 0.5))/*Inlines.SILK_CONST(1.0f, 12)*/,
-                        ((int) ((TuningParameters.LOW_QUALITY_LOW_FREQ_SHAPING_DECR) * ((long) 1 << (13)) + 0.5))/*Inlines.SILK_CONST(TuningParameters.LOW_QUALITY_LOW_FREQ_SHAPING_DECR, 13)*/, psEnc.input_quality_bands_Q15[0] - ((int) ((1.0f) * ((long) 1 << (15)) + 0.5))/*Inlines.SILK_CONST(1.0f, 15)*/));
+                ((int) ((TuningParameters.LOW_QUALITY_LOW_FREQ_SHAPING_DECR) * ((long) 1 << (13)) + 0.5))/*Inlines.SILK_CONST(TuningParameters.LOW_QUALITY_LOW_FREQ_SHAPING_DECR, 13)*/, psEnc.input_quality_bands_Q15[0] - ((int) ((1.0f) * ((long) 1 << (15)) + 0.5))/*Inlines.SILK_CONST(1.0f, 15)*/));
         strength_Q16 = Inlines.silk_RSHIFT(Inlines.silk_MUL(strength_Q16, psEnc.speech_activity_Q8), 8);
         if (psEnc.indices.signalType == SilkConstants.TYPE_VOICED) {
             /* Reduce low frequencies quantization noise for periodic signals, depending on pitch lag */
- /*f = 400; freqz([1, -0.98 + 2e-4 * f], [1, -0.97 + 7e-4 * f], 2^12, Fs); axis([0, 1000, -10, 1])*/
+            /*f = 400; freqz([1, -0.98 + 2e-4 * f], [1, -0.97 + 7e-4 * f], 2^12, Fs); axis([0, 1000, -10, 1])*/
             int fs_kHz_inv = Inlines.silk_DIV32_16(((int) ((0.2f) * ((long) 1 << (14)) + 0.5))/*Inlines.SILK_CONST(0.2f, 14)*/, psEnc.fs_kHz);
             for (k = 0; k < psEnc.nb_subfr; k++) {
                 b_Q14 = fs_kHz_inv + Inlines.silk_DIV32_16(((int) ((3.0f) * ((long) 1 << (14)) + 0.5))/*Inlines.SILK_CONST(3.0f, 14)*/, psEncCtrl.pitchL[k]);
@@ -426,11 +427,11 @@ class NoiseShapeAnalysis {
             Inlines.OpusAssert(((int) ((TuningParameters.HARM_HP_NOISE_COEF) * ((long) 1 << (24)) + 0.5))/*Inlines.SILK_CONST(TuningParameters.HARM_HP_NOISE_COEF, 24)*/ < ((int) ((0.5f) * ((long) 1 << (24)) + 0.5))/*Inlines.SILK_CONST(0.5f, 24)*/);
             /* Guarantees that second argument to SMULWB() is within range of an short*/
             Tilt_Q16 = -((int) ((TuningParameters.HP_NOISE_COEF) * ((long) 1 << (16)) + 0.5))/*Inlines.SILK_CONST(TuningParameters.HP_NOISE_COEF, 16)*/ - Inlines.silk_SMULWB(((int) ((1.0f) * ((long) 1 << (16)) + 0.5))/*Inlines.SILK_CONST(1.0f, 16)*/ - ((int) ((TuningParameters.HP_NOISE_COEF) * ((long) 1 << (16)) + 0.5))/*Inlines.SILK_CONST(TuningParameters.HP_NOISE_COEF, 16)*/,
-                            Inlines.silk_SMULWB(((int) ((TuningParameters.HARM_HP_NOISE_COEF) * ((long) 1 << (24)) + 0.5))/*Inlines.SILK_CONST(TuningParameters.HARM_HP_NOISE_COEF, 24)*/, psEnc.speech_activity_Q8));
+                    Inlines.silk_SMULWB(((int) ((TuningParameters.HARM_HP_NOISE_COEF) * ((long) 1 << (24)) + 0.5))/*Inlines.SILK_CONST(TuningParameters.HARM_HP_NOISE_COEF, 24)*/, psEnc.speech_activity_Q8));
         } else {
             b_Q14 = Inlines.silk_DIV32_16(21299, psEnc.fs_kHz);
             /* 1.3_Q0 = 21299_Q14*/
- /* Pack two coefficients in one int32 */
+            /* Pack two coefficients in one int32 */
             psEncCtrl.LF_shp_Q14[0] = Inlines.silk_LSHIFT(((int) ((1.0f) * ((long) 1 << (14)) + 0.5))/*Inlines.SILK_CONST(1.0f, 14)*/ - b_Q14
                     - Inlines.silk_SMULWB(strength_Q16, Inlines.silk_SMULWB(((int) ((0.6f) * ((long) 1 << (16)) + 0.5))/*Inlines.SILK_CONST(0.6f, 16)*/, b_Q14)), 16);
             psEncCtrl.LF_shp_Q14[0] |= (b_Q14 - ((int) ((1.0f) * ((long) 1 << (14)) + 0.5))/*Inlines.SILK_CONST(1.0f, 14)*/) & 0xFFFF;

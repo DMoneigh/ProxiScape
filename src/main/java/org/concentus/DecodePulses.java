@@ -37,6 +37,7 @@ class DecodePulses {
      * ******************************************
      */
     /* Decode quantization indices of excitation */
+
     /**
      * ******************************************
      */

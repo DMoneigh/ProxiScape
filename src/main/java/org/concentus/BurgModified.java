@@ -120,9 +120,9 @@ class BurgModified {
         reached_max_gain = 0;
         for (n = 0; n < D; n++) {
             /* Update first row of correlation matrix (without first element) */
- /* Update last row of correlation matrix (without last element, stored in reversed order) */
- /* Update C * Af */
- /* Update C * flipud(Af) (stored in reversed order) */
+            /* Update last row of correlation matrix (without last element, stored in reversed order) */
+            /* Update C * Af */
+            /* Update C * flipud(Af) (stored in reversed order) */
             if (rshifts > -2) {
                 for (s = 0; s < nb_subfr; s++) {
                     x_offset = x_ptr + s * subfr_length;
@@ -229,7 +229,7 @@ class BurgModified {
             num = Inlines.silk_LSHIFT32(-num, 1);
             /* Q( 1-rshifts ) */
 
- /* Calculate the next order reflection (parcor) coefficient */
+            /* Calculate the next order reflection (parcor) coefficient */
             if (Inlines.silk_abs(num) < nrg) {
                 rc_Q31 = Inlines.silk_DIV32_varQ(num, nrg, 31);
             } else {
@@ -245,7 +245,7 @@ class BurgModified {
                 /* Q30 */
                 rc_Q31 = Inlines.silk_SQRT_APPROX(tmp2);
                 /* Q15 */
- /* Newton-Raphson iteration */
+                /* Newton-Raphson iteration */
                 rc_Q31 = Inlines.silk_RSHIFT32(rc_Q31 + Inlines.silk_DIV32(tmp2, rc_Q31), 1);
                 /* Q15 */
                 rc_Q31 = Inlines.silk_LSHIFT32(rc_Q31, 16);

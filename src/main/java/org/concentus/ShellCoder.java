@@ -39,7 +39,7 @@ class ShellCoder {
     /// <summary>
     /// </summary>
     /// <param name="output">O    combined pulses vector [len]</param>
-    /// <param name="input">I    input vector       [2 * len]</param>
+    /// <param name="input">I    input vector       [2*len]</param>
     /// <param name="len">I    number of OUTPUT samples</param>
     static void combine_pulses(
             int[] output,
@@ -55,7 +55,7 @@ class ShellCoder {
     /// <summary>
     /// </summary>
     /// <param name="output">O    combined pulses vector [len]</param>
-    /// <param name="input">I    input vector       [2 * len]</param>
+    /// <param name="input">I    input vector       [2*len]</param>
     /// <param name="len">I    number of OUTPUT samples</param>
     static void combine_pulses(
             int[] output,
@@ -79,7 +79,7 @@ class ShellCoder {
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="p_child1">O    pulse amplitude of first child subframe</param>
     /// <param name="p_child2">O    pulse amplitude of second child subframe</param>

@@ -40,6 +40,15 @@ package org.concentus;
 public class OpusEncoder {
 
     final EncControlState silk_mode = new EncControlState();
+    final TonalityAnalysisState analysis = new TonalityAnalysisState();
+    final int[] hp_mem = new int[4];
+    final StereoWidthState width_mem = new StereoWidthState();
+    final short[] delay_buffer = new short[OpusConstants.MAX_ENCODER_BUFFER * 2];
+    // [Porting Note] There were originally "cabooses" that were tacked onto the end
+    // of the struct without being explicitly included (since they have a variable size).
+    // Here they are just included as an intrinsic variable.
+    final SilkEncoder SilkEncoder = new SilkEncoder();
+    final CeltEncoder Celt_Encoder = new CeltEncoder();
     OpusApplication application;
     int channels;
     int delay_compensation;
@@ -58,14 +67,11 @@ public class OpusEncoder {
     int lsb_depth;
     int encoder_buffer;
     int lfe;
-    final TonalityAnalysisState analysis = new TonalityAnalysisState();
-
     // partial reset happens below this line
     int stream_channels;
     short hybrid_stereo_width_Q14;
     int variable_HP_smth2_Q15;
     int prev_HB_gain;
-    final int[] hp_mem = new int[4];
     OpusMode mode;
     OpusMode prev_mode;
     int prev_channels;
@@ -75,19 +81,60 @@ public class OpusEncoder {
     /* Sampling rate (at the API level) */
     int first;
     int[] energy_masking;
-    final StereoWidthState width_mem = new StereoWidthState();
-    final short[] delay_buffer = new short[OpusConstants.MAX_ENCODER_BUFFER * 2];
     OpusBandwidth detected_bandwidth;
     int rangeFinal;
 
-    // [Porting Note] There were originally "cabooses" that were tacked onto the end
-    // of the struct without being explicitly included (since they have a variable size).
-    // Here they are just included as an intrinsic variable.
-    final SilkEncoder SilkEncoder = new SilkEncoder();
-    final CeltEncoder Celt_Encoder = new CeltEncoder();
-
     OpusEncoder() {
     } // used internally
+
+    /**
+     * Allocates and initializes an encoder state. Note that regardless of the
+     * sampling rate and number channels selected, the Opus encoder can switch
+     * to a lower audio bandwidth or number of channels if the bitrate selected
+     * is too low. This also means that it is safe to always use 48 kHz stereo
+     * input and let the encoder optimize the encoding. The decoder will not be
+     * constrained later on by the mode that you select here for the encoder.
+     *
+     * @param Fs          Sampling rate of input signal (Hz). This must be one of 8000,
+     *                    12000, 16000, 24000, or 48000.
+     * @param channels    Number of channels (1 or 2) in input signal
+     * @param application There are three coding modes:
+     *                    <p>
+     *                    OPUS_APPLICATION_VOIP gives best quality at a given bitrate for voice
+     *                    signals. It enhances the input signal by high-pass filtering and
+     *                    emphasizing formants and harmonics.Optionally it includes in-band forward
+     *                    error correction to protect against packet loss. Use this mode for
+     *                    typical VoIP applications. Because of the enhancement, even at high
+     *                    bitrates the output may sound different from the input.
+     *                    <p>
+     *                    OPUS_APPLICATION_AUDIO gives best quality at a given bitrate for most
+     *                    non-voice signals like music. Use this mode for music and mixed
+     *                    (music/voice) content, broadcast, and applications requiring less than 15
+     *                    ms of coding delay.
+     *                    <p>
+     *                    OPUS_APPLICATION_RESTRICTED_LOWDELAY configures low-delay mode that
+     *                    disables the speech-optimized mode in exchange for slightly reduced
+     *                    delay. This mode can only be set on an newly initialized or freshly reset
+     *                    encoder because it changes the codec delay.
+     * @throws OpusException
+     */
+    public OpusEncoder(int Fs, int channels, OpusApplication application) throws OpusException {
+        int ret;
+        if ((Fs != 48000 && Fs != 24000 && Fs != 16000 && Fs != 12000 && Fs != 8000)) {
+            throw new IllegalArgumentException("Sample rate is invalid (must be 8/12/16/24/48 Khz)");
+        }
+        if (channels != 1 && channels != 2) {
+            throw new IllegalArgumentException("Number of channels must be 1 or 2");
+        }
+
+        ret = this.opus_init_encoder(Fs, channels, application);
+        if (ret != OpusError.OPUS_OK) {
+            if (ret == OpusError.OPUS_BAD_ARG) {
+                throw new IllegalArgumentException("OPUS_BAD_ARG when creating encoder");
+            }
+            throw new OpusException("Error while initializing encoder", ret);
+        }
+    }
 
     void reset() {
         silk_mode.Reset();
@@ -154,55 +201,6 @@ public class OpusEncoder {
         variable_HP_smth2_Q15 = Inlines.silk_LSHIFT(Inlines.silk_lin2log(TuningParameters.VARIABLE_HP_MIN_CUTOFF_HZ), 8);
     }
 
-    /**
-     * Allocates and initializes an encoder state. Note that regardless of the
-     * sampling rate and number channels selected, the Opus encoder can switch
-     * to a lower audio bandwidth or number of channels if the bitrate selected
-     * is too low. This also means that it is safe to always use 48 kHz stereo
-     * input and let the encoder optimize the encoding. The decoder will not be
-     * constrained later on by the mode that you select here for the encoder.
-     *
-     * @param Fs Sampling rate of input signal (Hz). This must be one of 8000,
-     * 12000, 16000, 24000, or 48000.
-     * @param channels Number of channels (1 or 2) in input signal
-     * @param application There are three coding modes:
-     *
-     * OPUS_APPLICATION_VOIP gives best quality at a given bitrate for voice
-     * signals. It enhances the input signal by high-pass filtering and
-     * emphasizing formants and harmonics.Optionally it includes in-band forward
-     * error correction to protect against packet loss. Use this mode for
-     * typical VoIP applications. Because of the enhancement, even at high
-     * bitrates the output may sound different from the input.
-     *
-     * OPUS_APPLICATION_AUDIO gives best quality at a given bitrate for most
-     * non-voice signals like music. Use this mode for music and mixed
-     * (music/voice) content, broadcast, and applications requiring less than 15
-     * ms of coding delay.
-     *
-     * OPUS_APPLICATION_RESTRICTED_LOWDELAY configures low-delay mode that
-     * disables the speech-optimized mode in exchange for slightly reduced
-     * delay. This mode can only be set on an newly initialized or freshly reset
-     * encoder because it changes the codec delay.
-     * @throws OpusException
-     */
-    public OpusEncoder(int Fs, int channels, OpusApplication application) throws OpusException {
-        int ret;
-        if ((Fs != 48000 && Fs != 24000 && Fs != 16000 && Fs != 12000 && Fs != 8000)) {
-            throw new IllegalArgumentException("Sample rate is invalid (must be 8/12/16/24/48 Khz)");
-        }
-        if (channels != 1 && channels != 2) {
-            throw new IllegalArgumentException("Number of channels must be 1 or 2");
-        }
-
-        ret = this.opus_init_encoder(Fs, channels, application);
-        if (ret != OpusError.OPUS_OK) {
-            if (ret == OpusError.OPUS_BAD_ARG) {
-                throw new IllegalArgumentException("OPUS_BAD_ARG when creating encoder");
-            }
-            throw new OpusException("Error while initializing encoder", ret);
-        }
-    }
-
     int opus_init_encoder(int Fs, int channels, OpusApplication application) {
         SilkEncoder silk_enc;
         CeltEncoder celt_enc;
@@ -245,7 +243,7 @@ public class OpusEncoder {
         this.silk_mode.reducedDependency = 0;
 
         /* Create CELT encoder */
- /* Initialize CELT encoder */
+        /* Initialize CELT encoder */
         err = celt_enc.celt_encoder_init(Fs, channels);
         if (err != OpusError.OPUS_OK) {
             return OpusError.OPUS_INTERNAL_ERROR;
@@ -300,7 +298,7 @@ public class OpusEncoder {
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <typeparam name="T">The storage type of analysis_pcm, either short or float</typeparam>
     /// <param name="this"></param>
@@ -318,9 +316,9 @@ public class OpusEncoder {
     /// <param name="float_api"></param>
     /// <returns></returns>
     int opus_encode_native(short[] pcm, int pcm_ptr, int frame_size,
-            byte[] data, int data_ptr, int out_data_bytes, int lsb_depth,
-            short[] analysis_pcm, int analysis_pcm_ptr, int analysis_size, int c1, int c2,
-            int analysis_channels, int float_api) {
+                           byte[] data, int data_ptr, int out_data_bytes, int lsb_depth,
+                           short[] analysis_pcm, int analysis_pcm_ptr, int analysis_size, int c1, int c2,
+                           int analysis_channels, int float_api) {
         SilkEncoder silk_enc;
         CeltEncoder celt_enc;
         int i;
@@ -527,7 +525,7 @@ public class OpusEncoder {
             }
 
             /*printf("%f %d\n", stereo_width/(float)1.0f, threshold);*/
- /* Hysteresis */
+            /* Hysteresis */
             if (this.prev_mode == OpusMode.MODE_CELT_ONLY) {
                 threshold -= 4000;
             } else if (this.prev_mode != OpusMode.MODE_AUTO && this.prev_mode != OpusMode.MODE_UNKNOWN) {
@@ -798,7 +796,7 @@ public class OpusEncoder {
         curr_bandwidth = this.bandwidth;
 
         /* Chooses the appropriate mode for speech
-           *NEVER* switch to/from CELT-only mode here as this will invalidate some assumptions */
+         *NEVER* switch to/from CELT-only mode here as this will invalidate some assumptions */
         if (this.mode == OpusMode.MODE_SILK_ONLY && OpusBandwidthHelpers.GetOrdinal(curr_bandwidth) > OpusBandwidthHelpers.GetOrdinal(OpusBandwidth.OPUS_BANDWIDTH_WIDEBAND)) {
             this.mode = OpusMode.MODE_HYBRID;
         }
@@ -851,7 +849,7 @@ public class OpusEncoder {
                     this.silk_mode.bitRate += (total_bitRate - this.silk_mode.bitRate) * 2 / 3;
                 } else {
                     /* FULLBAND */
- /* SILK gets 3/5 of the remaining bits */
+                    /* SILK gets 3/5 of the remaining bits */
                     this.silk_mode.bitRate += (total_bitRate - this.silk_mode.bitRate) * 3 / 5;
                 }
                 /* Don't let SILK use more than 80% */
@@ -989,7 +987,7 @@ public class OpusEncoder {
 
             if (ret != 0) {
                 /*fprintf (stderr, "SILK encode error: %d\n", ret);*/
- /* Handle error */
+                /* Handle error */
 
                 return OpusError.OPUS_INTERNAL_ERROR;
             }
@@ -1273,20 +1271,21 @@ public class OpusEncoder {
 
     /**
      * Encodes an Opus frame, putting the output into a specified data buffer
-     * @param in_pcm 16-bit input signal (Interleaved if stereo), in a short array. Length should be at least frame_size * channels
-     * @param pcm_offset Offset to use when reading the in_pcm buffer
-     * @param frame_size The number of samples _per channel_ in the inpus signal. The frame size must be a valid Opus framesize for the given sample rate.
-     * For example, at 48Khz the permitted values are 120, 240, 480, 960, 1920, and 2880. Passing in a duration of less than 10ms
-     * (480 samples at 48Khz) will prevent the encoder from using FEC, DTX, or hybrid modes.
-     * @param out_data Destination buffer for the output payload. This must contain at least max_data_bytes
+     *
+     * @param in_pcm          16-bit input signal (Interleaved if stereo), in a short array. Length should be at least frame_size * channels
+     * @param pcm_offset      Offset to use when reading the in_pcm buffer
+     * @param frame_size      The number of samples _per channel_ in the inpus signal. The frame size must be a valid Opus framesize for the given sample rate.
+     *                        For example, at 48Khz the permitted values are 120, 240, 480, 960, 1920, and 2880. Passing in a duration of less than 10ms
+     *                        (480 samples at 48Khz) will prevent the encoder from using FEC, DTX, or hybrid modes.
+     * @param out_data        Destination buffer for the output payload. This must contain at least max_data_bytes
      * @param out_data_offset The offset to use when writing to the output data buffer
-     * @param max_data_bytes The maximum amount of space allocated for the output payload. This may be used to impose
-     * an upper limit on the instant bitrate, but should not be used as the only bitrate control (use setBitrate for that)
+     * @param max_data_bytes  The maximum amount of space allocated for the output payload. This may be used to impose
+     *                        an upper limit on the instant bitrate, but should not be used as the only bitrate control (use setBitrate for that)
      * @return The length of the encoded packet, in bytes
-     * @throws OpusException 
+     * @throws OpusException
      */
     public int encode(short[] in_pcm, int pcm_offset, int frame_size,
-            byte[] out_data, int out_data_offset, int max_data_bytes) throws OpusException {
+                      byte[] out_data, int out_data_offset, int max_data_bytes) throws OpusException {
         // Check that the caller is telling the truth about its input buffers
         if (out_data_offset + max_data_bytes > out_data.length) {
             throw new IllegalArgumentException("Output buffer is too small: Stated size is " + max_data_bytes + " bytes, actual size is " + (out_data.length - out_data_offset) + " bytes");
@@ -1328,26 +1327,27 @@ public class OpusEncoder {
 
     /**
      * Encodes an Opus frame, putting the output into a specified data buffer
-     * @param in_pcm 16-bit input signal (Interleaved if stereo), in a little endian byte array. Length should be at least frame_size * channels * 2
-     * @param pcm_offset Offset to use when reading the in_pcm buffer
-     * @param frame_size The number of samples _per channel_ in the inpus signal. The frame size must be a valid Opus framesize for the given sample rate.
-     * For example, at 48Khz the permitted values are 120, 240, 480, 960, 1920, and 2880. Passing in a duration of less than 10ms
-     * (480 samples at 48Khz) will prevent the encoder from using FEC, DTX, or hybrid modes.
-     * @param out_data Destination buffer for the output payload. This must contain at least max_data_bytes
+     *
+     * @param in_pcm          16-bit input signal (Interleaved if stereo), in a little endian byte array. Length should be at least frame_size * channels * 2
+     * @param pcm_offset      Offset to use when reading the in_pcm buffer
+     * @param frame_size      The number of samples _per channel_ in the inpus signal. The frame size must be a valid Opus framesize for the given sample rate.
+     *                        For example, at 48Khz the permitted values are 120, 240, 480, 960, 1920, and 2880. Passing in a duration of less than 10ms
+     *                        (480 samples at 48Khz) will prevent the encoder from using FEC, DTX, or hybrid modes.
+     * @param out_data        Destination buffer for the output payload. This must contain at least max_data_bytes
      * @param out_data_offset The offset to use when writing to the output data buffer
-     * @param max_data_bytes The maximum amount of space allocated for the output payload. This may be used to impose
-     * an upper limit on the instant bitrate, but should not be used as the only bitrate control (use setBitrate for that)
+     * @param max_data_bytes  The maximum amount of space allocated for the output payload. This may be used to impose
+     *                        an upper limit on the instant bitrate, but should not be used as the only bitrate control (use setBitrate for that)
      * @return The length of the encoded packet, in bytes
-     * @throws OpusException 
+     * @throws OpusException
      */
     public int encode(byte[] in_pcm, int pcm_offset, int frame_size,
-            byte[] out_data, int out_data_offset, int max_data_bytes) throws OpusException {
-    	//Convert byte array to short array
-    	short[] spcm = new short[frame_size * channels];
-		for (int c = 0, idx = pcm_offset; c < spcm.length; idx += 2, c++) {
-			spcm[c] = (short) (((in_pcm[idx] & 0xff) | (in_pcm[idx + 1] << 8)) & 0xffff);
-		}
-		return encode(spcm, 0, frame_size, out_data, out_data_offset, max_data_bytes);
+                      byte[] out_data, int out_data_offset, int max_data_bytes) throws OpusException {
+        //Convert byte array to short array
+        short[] spcm = new short[frame_size * channels];
+        for (int c = 0, idx = pcm_offset; c < spcm.length; idx += 2, c++) {
+            spcm[c] = (short) (((in_pcm[idx] & 0xff) | (in_pcm[idx + 1] << 8)) & 0xffff);
+        }
+        return encode(spcm, 0, frame_size, out_data, out_data_offset, max_data_bytes);
     }
 
     /// <summary>
@@ -1521,7 +1521,7 @@ public class OpusEncoder {
     }
 
     /// <summary>
-    /// Gets or sets a hint to the encoder for what type of audio is being processed, voice or music 
+    /// Gets or sets a hint to the encoder for what type of audio is being processed, voice or music
     /// </summary>
     public OpusSignal getSignalType() {
         return signal_type;

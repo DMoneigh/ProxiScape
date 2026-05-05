@@ -37,11 +37,11 @@ class StereoEncodeState {
     final short[] sMid = new short[2];
     final short[] sSide = new short[2];
     final int[] mid_side_amp_Q0 = new int[4];
+    final byte[][][] predIx = Arrays.InitThreeDimensionalArrayByte(SilkConstants.MAX_FRAMES_PER_PACKET, 2, 3);
+    final byte[] mid_only_flags = new byte[SilkConstants.MAX_FRAMES_PER_PACKET];
     short smth_width_Q14 = 0;
     short width_prev_Q14 = 0;
     short silent_side_len = 0;
-    final byte[][][] predIx = Arrays.InitThreeDimensionalArrayByte(SilkConstants.MAX_FRAMES_PER_PACKET, 2, 3);
-    final byte[] mid_only_flags = new byte[SilkConstants.MAX_FRAMES_PER_PACKET];
 
     void Reset() {
         Arrays.MemSet(pred_prev_Q13, (short) 0, 2);

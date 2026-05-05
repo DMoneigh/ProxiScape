@@ -17,11 +17,10 @@ import java.util.concurrent.TimeUnit;
 public class VoiceClient extends Thread {
 
     private static final int PACKET_BUFFER_SIZE = 4096;
-
     private final BlockingQueue<DatagramPacket> packetQueue;
-
     private final PacketProcessor packetProcessor;
-
+    @Getter
+    private ProxiScapePlugin plugin;
     @Getter
     private DatagramSocket socket;
 
@@ -37,7 +36,9 @@ public class VoiceClient extends Thread {
     @Getter
     private boolean running;
 
-    public VoiceClient() throws SocketException {
+    public VoiceClient(ProxiScapePlugin plugin) throws SocketException {
+        this.plugin = plugin;
+
         socket = new DatagramSocket();
 
         running = true;

@@ -37,15 +37,13 @@ package org.concentus;
 class TOCStruct {
 
     /// <summary>
-    /// Voice activity for packet
-    /// </summary>
-    int VADFlag = 0;
-
-    /// <summary>
     /// Voice activity for each frame in packet
     /// </summary>
     final int[] VADFlags = new int[SilkConstants.SILK_MAX_FRAMES_PER_PACKET];
-
+    /// <summary>
+    /// Voice activity for packet
+    /// </summary>
+    int VADFlag = 0;
     /// <summary>
     /// Flag indicating if packet contains in-band FEC
     /// </summary>

@@ -63,14 +63,14 @@ class DecodeParameters {
         NLSF.silk_NLSF2A(psDecCtrl.PredCoef_Q12[1], pNLSF_Q15, psDec.LPC_order);
 
         /* If just reset, e.g., because internal Fs changed, do not allow interpolation */
- /* improves the case of packet loss in the first frame after a switch           */
+        /* improves the case of packet loss in the first frame after a switch           */
         if (psDec.first_frame_after_reset == 1) {
             psDec.indices.NLSFInterpCoef_Q2 = 4;
         }
 
         if (psDec.indices.NLSFInterpCoef_Q2 < 4) {
             /* Calculation of the interpolated NLSF0 vector from the interpolation factor, */
- /* the previous NLSF1, and the current NLSF1                                   */
+            /* the previous NLSF1, and the current NLSF1                                   */
             for (i = 0; i < psDec.LPC_order; i++) {
                 pNLSF0_Q15[i] = (short) (psDec.prevNLSF_Q15[i] + Inlines.silk_RSHIFT(Inlines.silk_MUL(psDec.indices.NLSFInterpCoef_Q2,
                         pNLSF_Q15[i] - psDec.prevNLSF_Q15[i]), 2));

@@ -53,22 +53,6 @@ class SilkEncoder {
         }
     }
 
-    void Reset() {
-        for (int c = 0; c < SilkConstants.ENCODER_NUM_CHANNELS; c++) {
-            state_Fxx[c].Reset();
-        }
-
-        sStereo.Reset();
-        nBitsUsedLBRR = 0;
-        nBitsExceeded = 0;
-        nChannelsAPI = 0;
-        nChannelsInternal = 0;
-        nPrevChannelsInternal = 0;
-        timeSinceSwitchAllowed_ms = 0;
-        allowBandwidthSwitch = 0;
-        prev_decode_only_middle = 0;
-    }
-
     /// <summary>
     /// Initialize Silk Encoder state
     /// </summary>
@@ -91,5 +75,21 @@ class SilkEncoder {
         ret += VoiceActivityDetection.silk_VAD_Init(psEnc.sVAD);
 
         return ret;
+    }
+
+    void Reset() {
+        for (int c = 0; c < SilkConstants.ENCODER_NUM_CHANNELS; c++) {
+            state_Fxx[c].Reset();
+        }
+
+        sStereo.Reset();
+        nBitsUsedLBRR = 0;
+        nBitsExceeded = 0;
+        nChannelsAPI = 0;
+        nChannelsInternal = 0;
+        nPrevChannelsInternal = 0;
+        timeSinceSwitchAllowed_ms = 0;
+        allowBandwidthSwitch = 0;
+        prev_decode_only_middle = 0;
     }
 }

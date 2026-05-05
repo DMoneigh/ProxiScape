@@ -36,10 +36,10 @@ package org.concentus;
 
 class ChannelLayout {
 
+    final short[] mapping = new short[256];
     int nb_channels;
     int nb_streams;
     int nb_coupled_streams;
-    final short[] mapping = new short[256];
 
     void Reset() {
         nb_channels = 0;

@@ -53,7 +53,7 @@ class VoiceActivityDetection {
         psSilk_VAD.Reset();
 
         /* init noise levels */
- /* Initialize array with approx pink noise levels (psd proportional to inverse of frequency) */
+        /* Initialize array with approx pink noise levels (psd proportional to inverse of frequency) */
         for (b = 0; b < SilkConstants.VAD_N_BANDS; b++) {
             psSilk_VAD.NoiseLevelBias[b] = Inlines.silk_max_32(Inlines.silk_DIV32_16(SilkConstants.VAD_NOISE_LEVELS_BIAS, (short) (b + 1)), 1);
         }
@@ -177,14 +177,14 @@ class VoiceActivityDetection {
             dec_subframe_offset = 0;
 
             /* Compute energy per sub-frame */
- /* initialize with summed energy of last subframe */
+            /* initialize with summed energy of last subframe */
             Xnrg[b] = psSilk_VAD.XnrgSubfr[b];
             for (s = 0; s < SilkConstants.VAD_INTERNAL_SUBFRAMES; s++) {
                 sumSquared = 0;
 
                 for (i = 0; i < dec_subframe_length; i++) {
                     /* The energy will be less than dec_subframe_length * ( silk_int16_MIN / 8 ) ^ 2.            */
- /* Therefore we can accumulate with no risk of overflow (unless dec_subframe_length > 128)  */
+                    /* Therefore we can accumulate with no risk of overflow (unless dec_subframe_length > 128)  */
                     x_tmp = Inlines.silk_RSHIFT(
                             X[X_offset[b] + i + dec_subframe_offset], 3);
                     sumSquared = Inlines.silk_SMLABB(sumSquared, x_tmp, x_tmp);
@@ -241,7 +241,7 @@ class VoiceActivityDetection {
                 sumSquared = Inlines.silk_SMLABB(sumSquared, SNR_Q7, SNR_Q7);
                 /* Q14 */
 
- /* Tilt measure */
+                /* Tilt measure */
                 if (speech_nrg < ((int) 1 << 20)) {
                     /* Scale down SNR value for small subband speech energies */
                     SNR_Q7 = Inlines.silk_SMULWB(Inlines.silk_LSHIFT(Inlines.silk_SQRT_APPROX(speech_nrg), 6), SNR_Q7);
@@ -256,7 +256,7 @@ class VoiceActivityDetection {
         sumSquared = Inlines.silk_DIV32_16(sumSquared, SilkConstants.VAD_N_BANDS);
         /* Q14 */
 
- /* Root-mean-square approximation, scale to dBs, and write to output pointer */
+        /* Root-mean-square approximation, scale to dBs, and write to output pointer */
         pSNR_dB_Q7 = (short) (3 * Inlines.silk_SQRT_APPROX(sumSquared));
         /* Q7 */
 

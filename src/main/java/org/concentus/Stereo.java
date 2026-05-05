@@ -84,7 +84,7 @@ class Stereo {
     /// Entropy code the mid/side quantization indices
     /// </summary>
     /// <param name="psRangeEnc">I/O  Compressor data structure</param>
-    /// <param name="ix">I    Quantization indices [ 2 ][ 3 ]</param>
+    /// <param name="ix">I    Quantization indices [2 ][3]</param>
     static void silk_stereo_encode_pred(EntropyCoder psRangeEnc, byte[][] ix) {
         int n;
 
@@ -177,7 +177,7 @@ class Stereo {
     /// <param name="state">I/O  State</param>
     /// <param name="x1">I/O  Left input signal, becomes mid signal</param>
     /// <param name="x2">I/O  Right input signal, becomes side signal</param>
-    /// <param name="ix">O    Quantization indices [ 2 ][ 3 ]</param>
+    /// <param name="ix">O    Quantization indices [2 ][3]</param>
     /// <param name="mid_only_flag">O    Flag: only mid signal coded</param>
     /// <param name="mid_side_rates_bps">O    Bitrates for mid and side signals</param>
     /// <param name="total_rate_bps">I    Total bitrate</param>
@@ -297,7 +297,7 @@ class Stereo {
         } else if (state.width_prev_Q14 == 0
                 && (8 * total_rate_bps < 13 * min_mid_rate_bps || Inlines.silk_SMULWB(frac_Q16, state.smth_width_Q14) < ((int) ((0.05f) * ((long) 1 << (14)) + 0.5))/*Inlines.SILK_CONST(0.05f, 14)*/)) {
             /* Code as panned-mono; previous frame already had zero width */
- /* Scale down and quantize predictors */
+            /* Scale down and quantize predictors */
             pred_Q13[0] = Inlines.silk_RSHIFT(Inlines.silk_SMULBB(state.smth_width_Q14, pred_Q13[0]), 14);
             pred_Q13[1] = Inlines.silk_RSHIFT(Inlines.silk_SMULBB(state.smth_width_Q14, pred_Q13[1]), 14);
             silk_stereo_quant_pred(pred_Q13, ix);
@@ -311,7 +311,7 @@ class Stereo {
         } else if (state.width_prev_Q14 != 0
                 && (8 * total_rate_bps < 11 * min_mid_rate_bps || Inlines.silk_SMULWB(frac_Q16, state.smth_width_Q14) < ((int) ((0.02f) * ((long) 1 << (14)) + 0.5))/*Inlines.SILK_CONST(0.02f, 14)*/)) {
             /* Transition to zero-width stereo */
- /* Scale down and quantize predictors */
+            /* Scale down and quantize predictors */
             pred_Q13[0] = Inlines.silk_RSHIFT(Inlines.silk_SMULBB(state.smth_width_Q14, pred_Q13[0]), 14);
             pred_Q13[1] = Inlines.silk_RSHIFT(Inlines.silk_SMULBB(state.smth_width_Q14, pred_Q13[1]), 14);
             silk_stereo_quant_pred(pred_Q13, ix);
@@ -458,7 +458,7 @@ class Stereo {
     /// Quantize mid/side predictors
     /// </summary>
     /// <param name="pred_Q13">I/O  Predictors (out: quantized)</param>
-    /// <param name="ix">O    Quantization indices [ 2 ][ 3 ]</param>
+    /// <param name="ix">O    Quantization indices [2 ][3]</param>
     static void silk_stereo_quant_pred(
             int[] pred_Q13,
             byte[][] ix) {

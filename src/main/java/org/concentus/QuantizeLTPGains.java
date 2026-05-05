@@ -57,7 +57,7 @@ class QuantizeLTPGains {
          * ************************************************
          */
         /* iterate over different codebooks with different */
- /* rates/distortions, and choose best */
+        /* rates/distortions, and choose best */
         /**
          * ************************************************
          */

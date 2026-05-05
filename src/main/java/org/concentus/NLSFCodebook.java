@@ -61,12 +61,12 @@ class NLSFCodebook {
     short[] CB1_iCDF = null;
 
     /// <summary>
-    /// POINTER to Backward predictor coefs [ order ]
+    /// POINTER to Backward predictor coefs [order]
     /// </summary>
     short[] pred_Q8 = null;
 
     /// <summary>
-    /// POINTER to Indices to entropy coding tables [ order ]
+    /// POINTER to Indices to entropy coding tables [order]
     /// </summary>
     short[] ec_sel = null;
 

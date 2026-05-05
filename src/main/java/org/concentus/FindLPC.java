@@ -76,7 +76,7 @@ class FindLPC {
             res_tmp_nrg_Q = scratch_box2.Val;
 
             /* subtract residual energy here, as that's easier than adding it to the    */
- /* residual energy of the first 10 ms in each iteration of the search below */
+            /* residual energy of the first 10 ms in each iteration of the search below */
             shift = res_tmp_nrg_Q - res_nrg_Q;
             if (shift >= 0) {
                 if (shift < 32) {

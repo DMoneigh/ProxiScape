@@ -36,6 +36,8 @@ package org.concentus;
 
 class VQ {
 
+    private static int[] SPREAD_FACTOR = {15, 10, 5};
+
     static void exp_rotation1(int[] X, int X_ptr, int len, int stride, int c, int s) {
         int i;
         int ms;
@@ -60,8 +62,6 @@ class VQ {
             Xptr--;
         }
     }
-
-    private static int[] SPREAD_FACTOR = {15, 10, 5};
 
     static void exp_rotation(int[] X, int X_ptr, int len, int dir, int stride, int K, int spread) {
         int i;
@@ -117,7 +117,7 @@ class VQ {
      * that will give ||p+g*y||=1 and mixes the residual with the pitch.
      */
     static void normalise_residual(int[] iy, int[] X, int X_ptr,
-            int N, int Ryy, int gain) {
+                                   int N, int Ryy, int gain) {
         int i;
         int k;
         int t;
@@ -266,7 +266,7 @@ class VQ {
                 Rxy = Inlines.MULT16_16_Q15(Rxy, Rxy);
                 /* The idea is to check for num/den >= best_num/best_den, but that way
                    we can do it without any division */
- /* OPT: Make sure to use conditional moves here */
+                /* OPT: Make sure to use conditional moves here */
                 if (Inlines.MULT16_16(best_den, Rxy) > Inlines.MULT16_16(Ryy, best_num)) {
                     best_den = Ryy;
                     best_num = Rxy;
@@ -280,7 +280,7 @@ class VQ {
             yy = Inlines.ADD16(yy, y[best_id]);
 
             /* Only now that we've made the final choice, update y/iy */
- /* Multiplying y[j] by 2 so we don't have to do it everywhere else */
+            /* Multiplying y[j] by 2 so we don't have to do it everywhere else */
             y[best_id] = (y[best_id] + (2 * s));
             iy[best_id]++;
         }
@@ -306,7 +306,7 @@ class VQ {
      * produce the final normalised signal in the current band.
      */
     static int alg_unquant(int[] X, int X_ptr, int N, int K, int spread, int B,
-            EntropyCoder dec, int gain) {
+                           EntropyCoder dec, int gain) {
         int Ryy;
         int collapse_mask;
         int[] iy = new int[N];

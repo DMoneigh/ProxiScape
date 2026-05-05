@@ -34,7 +34,7 @@ package org.concentus;
 class Sort {
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="a">(I/O) Unsorted / Sorted vector</param>
     /// <param name="idx">(O) Index vector for the sorted elements</param>
@@ -155,7 +155,7 @@ class Sort {
         }
 
         /* If less than L values are asked for, check the remaining values, */
- /* but only spend CPU to ensure that the K first values are correct */
+        /* but only spend CPU to ensure that the K first values are correct */
         for (i = K; i < L; i++) {
             value = a[i];
             if (value > a[K - 1]) {

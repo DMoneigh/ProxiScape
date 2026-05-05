@@ -36,11 +36,12 @@ package org.concentus;
 /// </summary>
 class PLCStruct {
 
-    int pitchL_Q8 = 0;
     /* Pitch lag to use for voiced concealment                          */
     final short[] LTPCoef_Q14 = new short[SilkConstants.LTP_ORDER];
     /* LTP coeficients to use for voiced concealment                    */
     final short[] prevLPC_Q12 = new short[SilkConstants.MAX_LPC_ORDER];
+    final int[] prevGain_Q16 = new int[2];
+    int pitchL_Q8 = 0;
     int last_frame_lost = 0;
     /* Was previous frame lost                                          */
     int rand_seed = 0;
@@ -50,7 +51,6 @@ class PLCStruct {
     int conc_energy = 0;
     int conc_energy_shift = 0;
     short prevLTP_scale_Q14 = 0;
-    final int[] prevGain_Q16 = new int[2];
     int fs_kHz = 0;
     int nb_subfr = 0;
     int subfr_length = 0;

@@ -34,7 +34,7 @@ package org.concentus;
 class ResidualEnergy {
 
     /* Calculates residual energies of input subframes where all subframes have LPC_order   */
- /* of preceding samples                                                                 */
+    /* of preceding samples                                                                 */
     static void silk_residual_energy(
             int[] nrgs, /* O    Residual energy per subframe  [MAX_NB_SUBFR]                                              */
             int[] nrgsQ, /* O    Q value per subframe   [MAX_NB_SUBFR]                                                     */
@@ -92,7 +92,7 @@ class ResidualEnergy {
             tmp32 = Inlines.silk_SMMUL(tmp32, tmp32);
             /* Q( 2 * lz2 - 32 )*/
 
- /* Scale energies */
+            /* Scale energies */
             nrgs[i] = Inlines.silk_SMMUL(tmp32, Inlines.silk_LSHIFT32(nrgs[i], lz1));
             /* Q( nrgsQ[ i ] + lz1 + 2 * lz2 - 32 - 32 )*/
             nrgsQ[i] += lz1 + 2 * lz2 - 32 - 32;
@@ -149,7 +149,7 @@ class ResidualEnergy {
         nrg = Inlines.silk_RSHIFT(wxx, 1 + lshifts) - tmp;
         /* Q: -lshifts - 1 */
 
- /* Add c' * wXX * c, assuming wXX is symmetric */
+        /* Add c' * wXX * c, assuming wXX is symmetric */
         tmp2 = 0;
         for (i = 0; i < D; i++) {
             tmp = 0;
@@ -163,7 +163,7 @@ class ResidualEnergy {
         nrg = Inlines.silk_ADD_LSHIFT32(nrg, tmp2, lshifts);
         /* Q: -lshifts - 1 */
 
- /* Keep one bit free always, because we add them for LSF interpolation */
+        /* Keep one bit free always, because we add them for LSF interpolation */
         if (nrg < 1) {
             nrg = 1;
         } else if (nrg > Inlines.silk_RSHIFT(Integer.MAX_VALUE, lshifts + 2)) {

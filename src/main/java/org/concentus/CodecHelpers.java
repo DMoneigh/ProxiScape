@@ -36,6 +36,9 @@ package org.concentus;
 
 public class CodecHelpers {
 
+    /* Don't use more than 60 ms for the frame size analysis */
+    private final static int MAX_DYNAMIC_FRAMESIZE = 24;
+
     static byte gen_toc(OpusMode mode, int framerate, OpusBandwidth bandwidth, int channels) {
         int period;
         short toc;
@@ -76,7 +79,7 @@ public class CodecHelpers {
         r_Q28 = ((int) ((1.0f) * ((long) 1 << (28)) + 0.5))/*Inlines.SILK_CONST(1.0f, 28)*/ - Inlines.silk_MUL(((int) ((0.92f) * ((long) 1 << (9)) + 0.5))/*Inlines.SILK_CONST(0.92f, 9)*/, Fc_Q19);
 
         /* b = r * [ 1; -2; 1 ]; */
- /* a = [ 1; -2 * r * ( 1 - 0.5 * Fc^2 ); r^2 ]; */
+        /* a = [ 1; -2 * r * ( 1 - 0.5 * Fc^2 ); r^2 ]; */
         B_Q28[0] = r_Q28;
         B_Q28[1] = Inlines.silk_LSHIFT(-r_Q28, 1);
         B_Q28[2] = r_Q28;
@@ -150,7 +153,7 @@ public class CodecHelpers {
     }
 
     static void gain_fade(short[] buffer, int buf_ptr, int g1, int g2,
-            int overlap48, int frame_size, int channels, int[] window, int Fs) {
+                          int overlap48, int frame_size, int channels, int[] window, int Fs) {
         int i;
         int inc;
         int overlap;
@@ -183,9 +186,6 @@ public class CodecHelpers {
         } while (++c < channels);
     }
 
-    /* Don't use more than 60 ms for the frame size analysis */
-    private final static int MAX_DYNAMIC_FRAMESIZE = 24;
-
     /* Estimates how much the bitrate will be boosted based on the sub-frame energy */
     static float transient_boost(float[] E, int E_ptr, float[] E_1, int LM, int maxM) {
         int i;
@@ -201,8 +201,8 @@ public class CodecHelpers {
         metric = sumE * sumE_1 / (M * M);
         /*if (LM==3)
            printf("%f\n", metric);*/
- /*return metric>10 ? 1 : 0;*/
- /*return Inlines.MAX16(0,1-exp(-.25*(metric-2.)));*/
+        /*return metric>10 ? 1 : 0;*/
+        /*return Inlines.MAX16(0,1-exp(-.25*(metric-2.)));*/
         return Inlines.MIN16(1, (float) Math.sqrt(Inlines.MAX16(0, .05f * (metric - 2))));
     }
 
@@ -307,7 +307,7 @@ public class CodecHelpers {
     }
 
     static int optimize_framesize(short[] x, int x_ptr, int len, int C, int Fs,
-            int bitrate, int tonality, float[] mem, int buffering) {
+                                  int bitrate, int tonality, float[] mem, int buffering) {
         int N;
         int i;
         float[] e = new float[MAX_DYNAMIC_FRAMESIZE + 4];
@@ -325,7 +325,7 @@ public class CodecHelpers {
         e_1[0] = 1.0f / (CeltConstants.EPSILON + mem[0]);
         if (buffering != 0) {
             /* Consider the CELT delay when not in restricted-lowdelay */
- /* We assume the buffering is between 2.5 and 5 ms */
+            /* We assume the buffering is between 2.5 and 5 ms */
             offset = 2 * subframe - buffering;
             Inlines.OpusAssert(offset >= 0 && offset <= subframe);
             len -= offset;
@@ -401,8 +401,8 @@ public class CodecHelpers {
     }
 
     static int compute_frame_size(short[] analysis_pcm, int analysis_pcm_ptr, int frame_size,
-            OpusFramesize variable_duration, int C, int Fs, int bitrate_bps,
-            int delay_compensation, float[] subframe_mem, boolean analysis_enabled
+                                  OpusFramesize variable_duration, int C, int Fs, int bitrate_bps,
+                                  int delay_compensation, float[] subframe_mem, boolean analysis_enabled
     ) {
 
         if (analysis_enabled && variable_duration == OpusFramesize.OPUS_FRAMESIZE_VARIABLE && frame_size >= Fs / 200) {
@@ -500,8 +500,8 @@ public class CodecHelpers {
     }
 
     static void smooth_fade(short[] in1, int in1_ptr, short[] in2, int in2_ptr,
-            short[] output, int output_ptr, int overlap, int channels,
-            int[] window, int Fs) {
+                            short[] output, int output_ptr, int overlap, int channels,
+                            int[] window, int Fs) {
         int i, c;
         int inc = 48000 / Fs;
         for (c = 0; c < channels; c++) {
@@ -609,14 +609,14 @@ public class CodecHelpers {
     //}
     public static String opus_strerror(int error) {
         String[] error_strings = {
-            "success",
-            "invalid argument",
-            "buffer too small",
-            "error",
-            "corrupted stream",
-            "request not implemented",
-            "invalid state",
-            "memory allocation failed"
+                "success",
+                "invalid argument",
+                "buffer too small",
+                "error",
+                "corrupted stream",
+                "request not implemented",
+                "invalid state",
+                "memory allocation failed"
         };
         if (error > 0 || error < -7) {
             return "unknown error";

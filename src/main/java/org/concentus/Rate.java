@@ -37,11 +37,11 @@ package org.concentus;
 class Rate {
 
     private static final byte[] LOG2_FRAC_TABLE = {
-        0,
-        8, 13,
-        16, 19, 21, 23,
-        24, 26, 27, 28, 29, 30, 31, 32,
-        32, 33, 34, 34, 35, 36, 36, 37, 37
+            0,
+            8, 13,
+            16, 19, 21, 23,
+            24, 26, 27, 28, 29, 30, 31, 32,
+            32, 33, 34, 34, 35, 36, 36, 37, 37
     };
 
     private static final int ALLOC_STEPS = 6;
@@ -83,9 +83,9 @@ class Rate {
     }
 
     static int interp_bits2pulses(CeltMode m, int start, int end, int skip_start,
-            int[] bits1, int[] bits2, int[] thresh, int[] cap, int total, BoxedValueInt _balance,
-            int skip_rsv, BoxedValueInt intensity, int intensity_rsv, BoxedValueInt dual_stereo, int dual_stereo_rsv, int[] bits,
-            int[] ebits, int[] fine_priority, int C, int LM, EntropyCoder ec, int encode, int prev, int signalBandwidth) {
+                                  int[] bits1, int[] bits2, int[] thresh, int[] cap, int total, BoxedValueInt _balance,
+                                  int skip_rsv, BoxedValueInt intensity, int intensity_rsv, BoxedValueInt dual_stereo, int dual_stereo_rsv, int[] bits,
+                                  int[] ebits, int[] fine_priority, int C, int LM, EntropyCoder ec, int encode, int prev, int signalBandwidth) {
         int psum;
         int lo, hi;
         int i, j;
@@ -107,7 +107,7 @@ class Rate {
             int mid = (lo + hi) >> 1;
             psum = 0;
             done = 0;
-            for (j = end; j-- > start;) {
+            for (j = end; j-- > start; ) {
                 int tmp = bits1[j] + (mid * (int) bits2[j] >> ALLOC_STEPS);
                 if (tmp >= thresh[j] || done != 0) {
                     done = 1;
@@ -126,7 +126,7 @@ class Rate {
         psum = 0;
         /*printf ("interp bisection gave %d\n", lo);*/
         done = 0;
-        for (j = end; j-- > start;) {
+        for (j = end; j-- > start; ) {
             int tmp = bits1[j] + (lo * bits2[j] >> ALLOC_STEPS);
             if (tmp < thresh[j] && done == 0) {
                 if (tmp >= alloc_floor) {
@@ -145,7 +145,7 @@ class Rate {
         }
 
         /* Decide which bands to skip, working backwards from the end. */
-        for (codedBands = end;; codedBands--) {
+        for (codedBands = end; ; codedBands--) {
             int band_width;
             int band_bits;
             int rem;
@@ -347,7 +347,7 @@ class Rate {
     }
 
     static int compute_allocation(CeltMode m, int start, int end, int[] offsets, int[] cap, int alloc_trim, BoxedValueInt intensity, BoxedValueInt dual_stereo,
-            int total, BoxedValueInt balance, int[] pulses, int[] ebits, int[] fine_priority, int C, int LM, EntropyCoder ec, int encode, int prev, int signalBandwidth) {
+                                  int total, BoxedValueInt balance, int[] pulses, int[] ebits, int[] fine_priority, int C, int LM, EntropyCoder ec, int encode, int prev, int signalBandwidth) {
         int lo, hi, len, j;
         int codedBands;
         int skip_start;
@@ -397,7 +397,7 @@ class Rate {
             int done = 0;
             int psum = 0;
             int mid = (lo + hi) >> 1;
-            for (j = end; j-- > start;) {
+            for (j = end; j-- > start; ) {
                 int bitsj;
                 int N = m.eBands[j + 1] - m.eBands[j];
                 bitsj = C * N * m.allocVectors[mid * len + j] << LM >> 2;

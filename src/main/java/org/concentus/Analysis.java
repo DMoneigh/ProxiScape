@@ -129,7 +129,7 @@ class Analysis {
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="tonal"></param>
     /// <param name="celt_mode"></param>
@@ -548,8 +548,8 @@ class Analysis {
     }
 
     static void run_analysis(TonalityAnalysisState analysis, CeltMode celt_mode, short[] analysis_pcm, int analysis_pcm_ptr,
-            int analysis_frame_size, int frame_size, int c1, int c2, int C, int Fs,
-            int lsb_depth, AnalysisInfo analysis_info) {
+                             int analysis_frame_size, int frame_size, int c1, int c2, int C, int Fs,
+                             int lsb_depth, AnalysisInfo analysis_info) {
         int offset;
         int pcm_len;
 

@@ -36,28 +36,28 @@ package org.concentus;
 
 /**
  * The Opus decoder structure.
- * 
+ * <p>
  * Opus is a stateful codec with overlapping blocks and as a result Opus
- *  packets are not coded independently of each other. Packets must be
- *  passed into the decoder serially and in the correct order for a correct
- *  decode. Lost packets can be replaced with loss concealment by calling
- *  the decoder with a null reference and zero length for the missing packet.
- * 
+ * packets are not coded independently of each other. Packets must be
+ * passed into the decoder serially and in the correct order for a correct
+ * decode. Lost packets can be replaced with loss concealment by calling
+ * the decoder with a null reference and zero length for the missing packet.
+ * <p>
  * A single codec state may only be accessed from a single thread at
- *  a time and any required locking must be performed by the caller. Separate
- *  streams must be decoded with separate decoder states and can be decoded
- *  in parallel.
+ * a time and any required locking must be performed by the caller. Separate
+ * streams must be decoded with separate decoder states and can be decoded
+ * in parallel.
  */
 public class OpusDecoder {
 
-    int channels;
-    int Fs;
+    private static final byte[] SILENCE = new byte[]{-1, -1};
     /**
      * Sampling rate (at the API level)
      */
     final DecControlState DecControl = new DecControlState();
+    int channels;
+    int Fs;
     int decode_gain;
-
     /* Everything beyond this point gets cleared on a reset */
     int stream_channels;
     OpusBandwidth bandwidth;
@@ -72,6 +72,39 @@ public class OpusDecoder {
 
     OpusDecoder() {
     } // used internally
+
+    /**
+     * Allocates and initializes a decoder state. Internally Opus stores data at
+     * 48000 Hz, so that should be the default value for Fs. However, the
+     * decoder can efficiently decode to buffers at 8, 12, 16, and 24 kHz so if
+     * for some reason the caller cannot use data at the full sample rate, or
+     * knows the compressed data doesn't use the full frequency range, it can
+     * request decoding at a reduced rate. Likewise, the decoder is capable of
+     * filling in either mono or interleaved stereo pcm buffers, at the caller's
+     * request.
+     *
+     * @param Fs       Sample rate to decode at (Hz). This must be one of 8000, 12000,
+     *                 16000, 24000, or 48000.
+     * @param channels Number of channels (1 or 2) to decode.
+     * @throws OpusException
+     */
+    public OpusDecoder(int Fs, int channels) throws OpusException {
+        int ret;
+        if ((Fs != 48000 && Fs != 24000 && Fs != 16000 && Fs != 12000 && Fs != 8000)) {
+            throw new IllegalArgumentException("Sample rate is invalid (must be 8/12/16/24/48 Khz)");
+        }
+        if (channels != 1 && channels != 2) {
+            throw new IllegalArgumentException("Number of channels must be 1 or 2");
+        }
+
+        ret = this.opus_decoder_init(Fs, channels);
+        if (ret != OpusError.OPUS_OK) {
+            if (ret == OpusError.OPUS_BAD_ARG) {
+                throw new IllegalArgumentException("OPUS_BAD_ARG when creating decoder");
+            }
+            throw new OpusException("Error while initializing decoder", ret);
+        }
+    }
 
     void reset() {
         channels = 0;
@@ -140,43 +173,8 @@ public class OpusDecoder {
         return OpusError.OPUS_OK;
     }
 
-    /**
-     * Allocates and initializes a decoder state. Internally Opus stores data at
-     * 48000 Hz, so that should be the default value for Fs. However, the
-     * decoder can efficiently decode to buffers at 8, 12, 16, and 24 kHz so if
-     * for some reason the caller cannot use data at the full sample rate, or
-     * knows the compressed data doesn't use the full frequency range, it can
-     * request decoding at a reduced rate. Likewise, the decoder is capable of
-     * filling in either mono or interleaved stereo pcm buffers, at the caller's
-     * request.
-     *
-     * @param Fs Sample rate to decode at (Hz). This must be one of 8000, 12000,
-     * 16000, 24000, or 48000.
-     * @param channels Number of channels (1 or 2) to decode.
-     * @throws OpusException
-     */
-    public OpusDecoder(int Fs, int channels) throws OpusException {
-        int ret;
-        if ((Fs != 48000 && Fs != 24000 && Fs != 16000 && Fs != 12000 && Fs != 8000)) {
-            throw new IllegalArgumentException("Sample rate is invalid (must be 8/12/16/24/48 Khz)");
-        }
-        if (channels != 1 && channels != 2) {
-            throw new IllegalArgumentException("Number of channels must be 1 or 2");
-        }
-
-        ret = this.opus_decoder_init(Fs, channels);
-        if (ret != OpusError.OPUS_OK) {
-            if (ret == OpusError.OPUS_BAD_ARG) {
-                throw new IllegalArgumentException("OPUS_BAD_ARG when creating decoder");
-            }
-            throw new OpusException("Error while initializing decoder", ret);
-        }
-    }
-
-    private static final byte[] SILENCE = new byte[]{-1, -1};
-
     int opus_decode_frame(byte[] data, int data_ptr,
-            int len, short[] pcm, int pcm_ptr, int frame_size, int decode_fec) {
+                          int len, short[] pcm, int pcm_ptr, int frame_size, int decode_fec) {
         SilkDecoder silk_dec;
         CeltDecoder celt_dec;
         int i, silk_ret = 0, celt_ret = 0;
@@ -535,8 +533,8 @@ public class OpusDecoder {
     }
 
     int opus_decode_native(byte[] data, int data_ptr,
-            int len, short[] pcm_out, int pcm_out_ptr, int frame_size, int decode_fec,
-            int self_delimited, BoxedValueInt packet_offset, int soft_clip) {
+                           int len, short[] pcm_out, int pcm_out_ptr, int frame_size, int decode_fec,
+                           int self_delimited, BoxedValueInt packet_offset, int soft_clip) {
         int i, nb_samples;
         int count, offset;
         int packet_frame_size, packet_stream_channels;
@@ -653,7 +651,7 @@ public class OpusDecoder {
     /// <param name="in_data_offset"></param>
     /// <param name="len"></param>
     /// <param name="out_pcm">
-    /// 
+    ///
     /// exact sizing.</param>
     /// <param name="out_pcm_offset"></param>
     /// <param name="frame_size"></param>
@@ -662,27 +660,28 @@ public class OpusDecoder {
     /// <returns>The number of decoded samples</returns>
     /**
      * Decodes an Opus packet.
-     * @param in_data The input payload. This may be NULL if that previous packet was lost in transit (when PLC is enabled)
+     *
+     * @param in_data        The input payload. This may be NULL if that previous packet was lost in transit (when PLC is enabled)
      * @param in_data_offset The offset to use when reading the input payload. Usually 0
-     * @param len The number of bytes in the payload (the packet size)
-     * @param out_pcm A buffer to put the output PCM, in a short array. The output size is (# of samples) * (# of channels).
-     *      You can use the OpusPacketInfo helpers to get a hint of the frame size before you decode the packet if you need exact sizing.
+     * @param len            The number of bytes in the payload (the packet size)
+     * @param out_pcm        A buffer to put the output PCM, in a short array. The output size is (# of samples) * (# of channels).
+     *                       You can use the OpusPacketInfo helpers to get a hint of the frame size before you decode the packet if you need exact sizing.
      * @param out_pcm_offset The offset to use when writing to the output buffer
-     * @param frame_size The number of samples (per channel) of available space in the output PCM buf.
-     * If this is less than the maximum packet duration (120ms; 5760 for 48khz), this function will
-     * not be capable of decoding some packets. In the case of PLC (data == NULL) or FEC (decode_fec == true),
-     * then frame_size needs to be exactly the duration of the audio that is missing, otherwise the decoder will
-     * not be in an optimal state to decode the next incoming packet. For the PLC and FEC cases, frame_size *must*
-     * be a multiple of 2.5 ms.
-     * @param decode_fec Indicates that we want to recreate the PREVIOUS (lost) packet using FEC data from THIS packet. Using this packet
-     * recovery scheme, you will actually decode this packet twice, first with decode_fec TRUE and then again with FALSE. If FEC data is not
-     * available in this packet, the decoder will simply generate a best-effort recreation of the lost packet. In that case,
-     * the length of frame_size must be EXACTLY the length of the audio that was lost, or else the decoder will be in an inconsistent state.
+     * @param frame_size     The number of samples (per channel) of available space in the output PCM buf.
+     *                       If this is less than the maximum packet duration (120ms; 5760 for 48khz), this function will
+     *                       not be capable of decoding some packets. In the case of PLC (data == NULL) or FEC (decode_fec == true),
+     *                       then frame_size needs to be exactly the duration of the audio that is missing, otherwise the decoder will
+     *                       not be in an optimal state to decode the next incoming packet. For the PLC and FEC cases, frame_size *must*
+     *                       be a multiple of 2.5 ms.
+     * @param decode_fec     Indicates that we want to recreate the PREVIOUS (lost) packet using FEC data from THIS packet. Using this packet
+     *                       recovery scheme, you will actually decode this packet twice, first with decode_fec TRUE and then again with FALSE. If FEC data is not
+     *                       available in this packet, the decoder will simply generate a best-effort recreation of the lost packet. In that case,
+     *                       the length of frame_size must be EXACTLY the length of the audio that was lost, or else the decoder will be in an inconsistent state.
      * @return The number of decoded samples (per channel)
-     * @throws OpusException 
+     * @throws OpusException
      */
     public int decode(byte[] in_data, int in_data_offset,
-            int len, short[] out_pcm, int out_pcm_offset, int frame_size, boolean decode_fec) throws OpusException {
+                      int len, short[] out_pcm, int out_pcm_offset, int frame_size, boolean decode_fec) throws OpusException {
         if (frame_size <= 0) {
             throw new IllegalArgumentException("Frame size must be > 0");
         }
@@ -707,35 +706,36 @@ public class OpusDecoder {
 
     /**
      * Decodes an Opus packet.
-     * @param in_data The input payload. This may be NULL if that previous packet was lost in transit (when PLC is enabled)
+     *
+     * @param in_data        The input payload. This may be NULL if that previous packet was lost in transit (when PLC is enabled)
      * @param in_data_offset The offset to use when reading the input payload. Usually 0
-     * @param len The number of bytes in the payload (the packet size)
-     * @param out_pcm A buffer to put the output PCM, in a byte array. The output size is (# of samples) * (# of channels) * 2.
-     *      You can use the OpusPacketInfo helpers to get a hint of the frame size before you decode the packet if you need exact sizing.
+     * @param len            The number of bytes in the payload (the packet size)
+     * @param out_pcm        A buffer to put the output PCM, in a byte array. The output size is (# of samples) * (# of channels) * 2.
+     *                       You can use the OpusPacketInfo helpers to get a hint of the frame size before you decode the packet if you need exact sizing.
      * @param out_pcm_offset The offset to use when writing to the output buffer
-     * @param frame_size The number of samples (per channel) of available space in the output PCM buf.
-     * If this is less than the maximum packet duration (120ms; 5760 for 48khz), this function will
-     * not be capable of decoding some packets. In the case of PLC (data == NULL) or FEC (decode_fec == true),
-     * then frame_size needs to be exactly the duration of the audio that is missing, otherwise the decoder will
-     * not be in an optimal state to decode the next incoming packet. For the PLC and FEC cases, frame_size *must*
-     * be a multiple of 2.5 ms.
-     * @param decode_fec Indicates that we want to recreate the PREVIOUS (lost) packet using FEC data from THIS packet. Using this packet
-     * recovery scheme, you will actually decode this packet twice, first with decode_fec TRUE and then again with FALSE. If FEC data is not
-     * available in this packet, the decoder will simply generate a best-effort recreation of the lost packet. In that case, the
-     * length of frame_size must be EXACTLY the length of the audio that was lost, or else the decoder will be in an inconsistent state.
+     * @param frame_size     The number of samples (per channel) of available space in the output PCM buf.
+     *                       If this is less than the maximum packet duration (120ms; 5760 for 48khz), this function will
+     *                       not be capable of decoding some packets. In the case of PLC (data == NULL) or FEC (decode_fec == true),
+     *                       then frame_size needs to be exactly the duration of the audio that is missing, otherwise the decoder will
+     *                       not be in an optimal state to decode the next incoming packet. For the PLC and FEC cases, frame_size *must*
+     *                       be a multiple of 2.5 ms.
+     * @param decode_fec     Indicates that we want to recreate the PREVIOUS (lost) packet using FEC data from THIS packet. Using this packet
+     *                       recovery scheme, you will actually decode this packet twice, first with decode_fec TRUE and then again with FALSE. If FEC data is not
+     *                       available in this packet, the decoder will simply generate a best-effort recreation of the lost packet. In that case, the
+     *                       length of frame_size must be EXACTLY the length of the audio that was lost, or else the decoder will be in an inconsistent state.
      * @return The number of decoded samples (per channel)
-     * @throws OpusException 
+     * @throws OpusException
      */
     public int decode(byte[] in_data, int in_data_offset, int len, byte[] out_pcm,
-    		int out_pcm_offset, int frame_size, boolean decode_fec) throws OpusException {
-    	short[] spcm = new short[Math.min(frame_size, 5760) * channels];
-    	int decSamples = decode(in_data, in_data_offset, len, spcm, 0, frame_size, decode_fec);
-    	//Convert short array to byte array
-    	for (int c = 0, idx = out_pcm_offset; c < spcm.length; c++) {
-    		out_pcm[idx++] = (byte) (spcm[c] & 0xff);
-    		out_pcm[idx++] = (byte) ((spcm[c] >> 8) & 0xff);
-    	}
-    	return decSamples;
+                      int out_pcm_offset, int frame_size, boolean decode_fec) throws OpusException {
+        short[] spcm = new short[Math.min(frame_size, 5760) * channels];
+        int decSamples = decode(in_data, in_data_offset, len, spcm, 0, frame_size, decode_fec);
+        //Convert short array to byte array
+        for (int c = 0, idx = out_pcm_offset; c < spcm.length; c++) {
+            out_pcm[idx++] = (byte) (spcm[c] & 0xff);
+            out_pcm[idx++] = (byte) ((spcm[c] >> 8) & 0xff);
+        }
+        return decSamples;
     }
 
     public OpusBandwidth getBandwidth() {

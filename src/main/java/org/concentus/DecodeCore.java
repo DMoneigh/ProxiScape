@@ -37,6 +37,7 @@ class DecodeCore {
      * *******************************************************
      */
     /* Core decoder. Performs inverse NSQ operation LTP + LPC */
+
     /**
      * *******************************************************
      */
@@ -179,7 +180,7 @@ class DecodeCore {
                 pred_lag_ptr = sLTP_buf_idx - lag + SilkConstants.LTP_ORDER / 2;
                 for (i = 0; i < psDec.subfr_length; i++) {
                     /* Unrolled loop */
- /* Avoids introducing a bias because silk_SMLAWB() always rounds to -inf */
+                    /* Avoids introducing a bias because silk_SMLAWB() always rounds to -inf */
                     LTP_pred_Q13 = 2;
                     LTP_pred_Q13 = Inlines.silk_SMLAWB(LTP_pred_Q13, sLTP_Q15[pred_lag_ptr], B_Q14[B_Q14_ptr]);
                     LTP_pred_Q13 = Inlines.silk_SMLAWB(LTP_pred_Q13, sLTP_Q15[pred_lag_ptr - 1], B_Q14[B_Q14_ptr + 1]);
@@ -233,7 +234,7 @@ class DecodeCore {
 
             /* DEBUG_STORE_DATA( dec.pcm, pxq, psDec.subfr_length * sizeof( short ) ) */
 
- /* Update LPC filter state */
+            /* Update LPC filter state */
             System.arraycopy(sLPC_Q14, psDec.subfr_length, sLPC_Q14, 0, SilkConstants.MAX_LPC_ORDER);
             pexc_Q14 += psDec.subfr_length;
             pxq += psDec.subfr_length;

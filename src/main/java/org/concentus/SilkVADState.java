@@ -60,27 +60,22 @@ class SilkVADState {
     /// Smoothed energy level in each band
     /// </summary>
     final int[] NrgRatioSmth_Q8 = new int[SilkConstants.VAD_N_BANDS];
-
-    /// <summary>
-    /// State of differentiator in the lowest band
-    /// </summary>
-    short HPstate = 0;
-
     /// <summary>
     /// Noise energy level in each band
     /// </summary>
     final int[] NL = new int[SilkConstants.VAD_N_BANDS];
-
     /// <summary>
     /// Inverse noise energy level in each band
     /// </summary>
     final int[] inv_NL = new int[SilkConstants.VAD_N_BANDS];
-
     /// <summary>
     /// Noise level estimator bias/offset
     /// </summary>
     final int[] NoiseLevelBias = new int[SilkConstants.VAD_N_BANDS];
-
+    /// <summary>
+    /// State of differentiator in the lowest band
+    /// </summary>
+    short HPstate = 0;
     /// <summary>
     /// Frame counter used in the initial phase
     /// </summary>

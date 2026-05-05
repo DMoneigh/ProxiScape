@@ -38,21 +38,31 @@ class CeltCommon {
 
     /* Table of 6*64/x, trained on real data to minimize the average error */
     private static final short[] inv_table = {
-        255, 255, 156, 110, 86, 70, 59, 51, 45, 40, 37, 33, 31, 28, 26, 25,
-        23, 22, 21, 20, 19, 18, 17, 16, 16, 15, 15, 14, 13, 13, 12, 12,
-        12, 12, 11, 11, 11, 10, 10, 10, 9, 9, 9, 9, 9, 9, 8, 8,
-        8, 8, 8, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5, 5, 5, 5, 5,
-        5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3,
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2,};
+            255, 255, 156, 110, 86, 70, 59, 51, 45, 40, 37, 33, 31, 28, 26, 25,
+            23, 22, 21, 20, 19, 18, 17, 16, 16, 15, 15, 14, 13, 13, 12, 12,
+            12, 12, 11, 11, 11, 10, 10, 10, 9, 9, 9, 9, 9, 9, 8, 8,
+            8, 8, 8, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6,
+            6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5, 5, 5, 5, 5,
+            5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2,};
+    private static final short[][] gains = {
+            new short[]{((short) (0.5 + (0.3066406250f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.3066406250f, 15)*/, ((short) (0.5 + (0.2170410156f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.2170410156f, 15)*/, ((short) (0.5 + (0.1296386719f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.1296386719f, 15)*/},
+            new short[]{((short) (0.5 + (0.4638671875f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.4638671875f, 15)*/, ((short) (0.5 + (0.2680664062f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.2680664062f, 15)*/, ((short) (0.5 + (0.0f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.0f, 15)*/},
+            new short[]{((short) (0.5 + (0.7998046875f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.7998046875f, 15)*/, ((short) (0.5 + (0.1000976562f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.1000976562f, 15)*/, ((short) (0.5 + (0.0f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.0f, 15)*/}
+    };
+    private static final byte[][] tf_select_table = {
+            new byte[]{0, -1, 0, -1, 0, -1, 0, -1},
+            new byte[]{0, -1, 0, -2, 1, 0, 1, -1},
+            new byte[]{0, -2, 0, -3, 2, 0, 1, -1},
+            new byte[]{0, -2, 0, -3, 3, 0, 1, -1},};
 
     static int compute_vbr(CeltMode mode, AnalysisInfo analysis, int base_target,
-            int LM, int bitrate, int lastCodedBands, int C, int intensity,
-            int constrained_vbr, int stereo_saving, int tot_boost,
-            int tf_estimate, int pitch_change, int maxDepth,
-            OpusFramesize variable_duration, int lfe, int has_surround_mask, int surround_masking,
-            int temporal_vbr) {
+                           int LM, int bitrate, int lastCodedBands, int C, int intensity,
+                           int constrained_vbr, int stereo_saving, int tot_boost,
+                           int tf_estimate, int pitch_change, int maxDepth,
+                           OpusFramesize variable_duration, int lfe, int has_surround_mask, int surround_masking,
+                           int temporal_vbr) {
         /* The target rate in 8th bits per frame */
         int target;
         int coded_bins;
@@ -181,7 +191,7 @@ class CeltCommon {
                 /*printf("%f ", tmp[i]);*/
             }
             /*printf("\n");*/
- /* First few samples are bad because we don't propagate the memory */
+            /* First few samples are bad because we don't propagate the memory */
             Arrays.MemSet(tmp, 0, 12);
 
             /* Normalize tmp to max range */
@@ -198,7 +208,7 @@ class CeltCommon {
             mean = 0;
             mem0 = 0;
             /* Grouping by two to reduce complexity */
- /* Forward pass to compute the post-echo threshold*/
+            /* Forward pass to compute the post-echo threshold*/
             for (i = 0; i < len2; i++) {
                 int x2 = (Inlines.PSHR32(Inlines.MULT16_16(tmp[2 * i], tmp[2 * i]) + Inlines.MULT16_16(tmp[2 * i + 1], tmp[2 * i + 1]), 16));
                 mean += x2;
@@ -222,7 +232,7 @@ class CeltCommon {
 
  /* As a compromise with the old transient detector, frame energy is the
                geometric mean of the energy and half the max */
- /* Costs two sqrt() to avoid overflows */
+            /* Costs two sqrt() to avoid overflows */
             mean = Inlines.MULT16_16(Inlines.celt_sqrt(mean), Inlines.celt_sqrt(Inlines.MULT16_16(maxE, len2 >> 1)));
             /* Inverse of the mean energy in Q15+6 */
             norm = Inlines.SHL32((len2), 6 + 14) / Inlines.ADD32(CeltConstants.EPSILON, Inlines.SHR32(mean, 1));
@@ -236,7 +246,7 @@ class CeltCommon {
                 unmask += inv_table[id];
             }
             /*printf("%d\n", unmask);*/
- /* Normalize, compensate for the 1/4th of the sample and the factor of 6 in the inverse table */
+            /* Normalize, compensate for the 1/4th of the sample and the factor of 6 in the inverse table */
             unmask = 64 * unmask * 4 / (6 * (len2 - 17));
             if (unmask > mask_metric) {
                 tf_chan.Val = c;
@@ -251,14 +261,14 @@ class CeltCommon {
         tf_estimate.Val = (Inlines.celt_sqrt(Inlines.MAX32(0, Inlines.SHL32(Inlines.MULT16_16(((short) (0.5 + (0.0069f) * (((int) 1) << (14))))/*Inlines.QCONST16(0.0069f, 14)*/, Inlines.MIN16(163, tf_max)), 14) - ((int) (0.5 + (0.139f) * (((int) 1) << (28))))/*Inlines.QCONST32(0.139f, 28)*/)));
         /*printf("%d %f\n", tf_max, mask_metric);*/
 
- /*printf("%d %f %d\n", is_transient, (float)*tf_estimate, tf_max);*/
+        /*printf("%d %f %d\n", is_transient, (float)*tf_estimate, tf_max);*/
         return is_transient;
     }
 
     /* Looks for sudden increases of energy to decide whether we need to patch
        the transient decision */
     static int patch_transient_decision(int[][] newE, int[][] oldE, int nbEBands,
-            int start, int end, int C) {
+                                        int start, int end, int C) {
         int i, c;
         int mean_diff = 0;
         int[] spread_old = new int[26];
@@ -299,7 +309,7 @@ class CeltCommon {
      * a frame
      */
     static void compute_mdcts(CeltMode mode, int shortBlocks, int[][] input,
-            int[][] output, int C, int CC, int LM, int upsample) {
+                              int[][] output, int C, int CC, int LM, int upsample) {
         int overlap = mode.overlap;
         int N;
         int B;
@@ -349,7 +359,7 @@ class CeltCommon {
     }
 
     static void celt_preemphasis(short[] pcmp, int pcmp_ptr, int[] inp, int inp_ptr,
-            int N, int CC, int upsample, int[] coef, BoxedValueInt mem, int clip) {
+                                 int N, int CC, int upsample, int[] coef, BoxedValueInt mem, int clip) {
         int i;
         int coef0;
         int m;
@@ -390,7 +400,7 @@ class CeltCommon {
     }
 
     static void celt_preemphasis(short[] pcmp, int[] inp, int inp_ptr,
-            int N, int CC, int upsample, int[] coef, BoxedValueInt mem, int clip) {
+                                 int N, int CC, int upsample, int[] coef, BoxedValueInt mem, int clip) {
         int i;
         int coef0;
         int m;
@@ -446,8 +456,8 @@ class CeltCommon {
     }
 
     static int tf_analysis(CeltMode m, int len, int isTransient,
-            int[] tf_res, int lambda, int[][] X, int N0, int LM,
-            BoxedValueInt tf_sum, int tf_estimate, int tf_chan) {
+                           int[] tf_res, int lambda, int[][] X, int N0, int LM,
+                           BoxedValueInt tf_sum, int tf_estimate, int tf_chan) {
         int i;
         int[] metric;
         int cost0;
@@ -516,7 +526,7 @@ class CeltCommon {
                 }
             }
             /*printf ("%d ", isTransient ? LM-best_level : best_level);*/
- /* metric is in Q1 to be able to select the mid-point (-0.5) for narrower bands */
+            /* metric is in Q1 to be able to select the mid-point (-0.5) for narrower bands */
             if (isTransient != 0) {
                 metric[i] = 2 * best_level;
             } else {
@@ -531,7 +541,7 @@ class CeltCommon {
             /*printf("%d ", metric[i]);*/
         }
         /*printf("\n");*/
- /* Search for the optimal tf resolution, including tf_select */
+        /* Search for the optimal tf resolution, including tf_select */
         tf_select = 0;
         for (sel = 0; sel < 2; sel++) {
             cost0 = 0;
@@ -634,9 +644,9 @@ class CeltCommon {
     }
 
     static int alloc_trim_analysis(CeltMode m, int[][] X,
-            int[][] bandLogE, int end, int LM, int C,
-            AnalysisInfo analysis, BoxedValueInt stereo_saving, int tf_estimate,
-            int intensity, int surround_trim) {
+                                   int[][] bandLogE, int end, int LM, int C,
+                                   AnalysisInfo analysis, BoxedValueInt stereo_saving, int tf_estimate,
+                                   int intensity, int surround_trim) {
         int i;
         int diff = 0;
         int c;
@@ -648,7 +658,7 @@ class CeltCommon {
             /* Q10 */
             int minXC;
             /* Q10 */
- /* Compute inter-channel correlation for low frequencies */
+            /* Compute inter-channel correlation for low frequencies */
             for (i = 0; i < 8; i++) {
                 int partial;
                 partial = Kernels.celt_inner_prod(X[0], (m.eBands[i] << LM), X[1], (m.eBands[i] << LM),
@@ -666,7 +676,7 @@ class CeltCommon {
             }
             minXC = Inlines.MIN16(((short) (0.5 + (1.0f) * (((int) 1) << (10))))/*Inlines.QCONST16(1.0f, 10)*/, Inlines.ABS32(minXC));
             /*printf ("%f\n", sum);*/
- /* mid-side savings estimations based on the LF average*/
+            /* mid-side savings estimations based on the LF average*/
             logXC = Inlines.celt_log2(((int) (0.5 + (1.001f) * (((int) 1) << (20))))/*Inlines.QCONST32(1.001f, 20)*/ - Inlines.MULT16_16(sum, sum));
             /* mid-side savings estimations based on min correlation */
             logXC2 = Inlines.MAX16(Inlines.HALF16(logXC), Inlines.celt_log2(((int) (0.5 + (1.001f) * (((int) 1) << (20))))/*Inlines.QCONST32(1.001f, 20)*/ - Inlines.MULT16_16(minXC, minXC)));
@@ -692,7 +702,7 @@ class CeltCommon {
         trim = (trim - 2 * Inlines.SHR16(tf_estimate, 14 - 8));
         if (analysis.enabled && analysis.valid != 0) {
             trim -= Inlines.MAX16(-((short) (0.5 + (2.0f) * (((int) 1) << (8))))/*Inlines.QCONST16(2.0f, 8)*/, Inlines.MIN16(((short) (0.5 + (2.0f) * (((int) 1) << (8))))/*Inlines.QCONST16(2.0f, 8)*/,
-                            (int) (((short) (0.5 + (2.0f) * (((int) 1) << (8))))/*Inlines.QCONST16(2.0f, 8)*/ * (analysis.tonality_slope + .05f))));
+                    (int) (((short) (0.5 + (2.0f) * (((int) 1) << (8))))/*Inlines.QCONST16(2.0f, 8)*/ * (analysis.tonality_slope + .05f))));
         }
         trim_index = Inlines.PSHR32(trim, 8);
         trim_index = Inlines.IMAX(0, Inlines.IMIN(10, trim_index));
@@ -702,7 +712,7 @@ class CeltCommon {
     }
 
     static int stereo_analysis(CeltMode m, int[][] X,
-            int LM) {
+                               int LM) {
         int i;
         int thetas;
         int sumLR = CeltConstants.EPSILON, sumMS = CeltConstants.EPSILON;
@@ -790,9 +800,9 @@ class CeltCommon {
     }
 
     static int dynalloc_analysis(int[][] bandLogE, int[][] bandLogE2,
-            int nbEBands, int start, int end, int C, int[] offsets, int lsb_depth, short[] logN,
-            int isTransient, int vbr, int constrained_vbr, short[] eBands, int LM,
-            int effectiveBytes, BoxedValueInt tot_boost_, int lfe, int[] surround_dynalloc) {
+                                 int nbEBands, int start, int end, int C, int[] offsets, int lsb_depth, short[] logN,
+                                 int isTransient, int vbr, int constrained_vbr, short[] eBands, int LM,
+                                 int effectiveBytes, BoxedValueInt tot_boost_, int lfe, int[] surround_dynalloc) {
         int i, c;
         int tot_boost = 0;
         int maxDepth;
@@ -920,7 +930,7 @@ class CeltCommon {
     }
 
     static void deemphasis(int[][] input, int[] input_ptrs, short[] pcm, int pcm_ptr, int N, int C, int downsample, int[] coef,
-            int[] mem, int accum) {
+                           int[] mem, int accum) {
         int c;
         int Nd;
         int apply_downsampling = 0;
@@ -980,9 +990,9 @@ class CeltCommon {
     }
 
     static void celt_synthesis(CeltMode mode, int[][] X, int[][] out_syn, int[] out_syn_ptrs,
-            int[] oldBandE, int start, int effEnd, int C, int CC,
-            int isTransient, int LM, int downsample,
-            int silence) {
+                               int[] oldBandE, int start, int effEnd, int C, int CC,
+                               int isTransient, int LM, int downsample,
+                               int silence) {
         int c, i;
         int M;
         int b;
@@ -1128,7 +1138,7 @@ class CeltCommon {
     }
 
     static void comb_filter_const(int[] y, int y_ptr, int[] x, int x_ptr, int T, int N,
-            int g10, int g11, int g12) {
+                                  int g10, int g11, int g12) {
         int x0, x1, x2, x3, x4;
         int i;
         int xpt = x_ptr - T;
@@ -1149,15 +1159,9 @@ class CeltCommon {
         }
     }
 
-    private static final short[][] gains = {
-        new short[]{((short) (0.5 + (0.3066406250f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.3066406250f, 15)*/, ((short) (0.5 + (0.2170410156f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.2170410156f, 15)*/, ((short) (0.5 + (0.1296386719f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.1296386719f, 15)*/},
-        new short[]{((short) (0.5 + (0.4638671875f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.4638671875f, 15)*/, ((short) (0.5 + (0.2680664062f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.2680664062f, 15)*/, ((short) (0.5 + (0.0f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.0f, 15)*/},
-        new short[]{((short) (0.5 + (0.7998046875f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.7998046875f, 15)*/, ((short) (0.5 + (0.1000976562f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.1000976562f, 15)*/, ((short) (0.5 + (0.0f) * (((int) 1) << (15))))/*Inlines.QCONST16(0.0f, 15)*/}
-    };
-
     static void comb_filter(int[] y, int y_ptr, int[] x, int x_ptr, int T0, int T1, int N,
-            int g0, int g1, int tapset0, int tapset1,
-            int[] window, int overlap) {
+                            int g0, int g1, int tapset0, int tapset1,
+                            int[] window, int overlap) {
         int i;
         /* printf ("%d %d %f %f\n", T0, T1, g0, g1); */
         int g00, g01, g02, g10, g11, g12;
@@ -1213,12 +1217,6 @@ class CeltCommon {
         /* Compute the part with the constant filter. */
         comb_filter_const(y, y_ptr + i, x, x_ptr + i, T1, N - i, g10, g11, g12);
     }
-
-    private static final byte[][] tf_select_table = {
-        new byte[]{0, -1, 0, -1, 0, -1, 0, -1},
-        new byte[]{0, -1, 0, -2, 1, 0, 1, -1},
-        new byte[]{0, -2, 0, -3, 2, 0, 1, -1},
-        new byte[]{0, -2, 0, -3, 3, 0, 1, -1},};
 
     static void init_caps(CeltMode m, int[] cap, int LM, int C) {
         int i;

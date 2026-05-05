@@ -34,7 +34,7 @@ package org.concentus;
 class Schur {
 
     /* Faster than schur64(), but much less accurate.                       */
- /* uses SMLAWB(), requiring armv5E and higher.                          */
+    /* uses SMLAWB(), requiring armv5E and higher.                          */
     static int silk_schur( /* O    Returns residual energy                                     */
             short[] rc_Q15, /* O    reflection coefficients [order] Q15                         */
             int[] c, /* I    correlations [order+1]                                      */
@@ -107,7 +107,7 @@ class Schur {
     }
 
     /* Slower than schur(), but more accurate.                              */
- /* Uses SMULL(), available on armv4                                     */
+    /* Uses SMULL(), available on armv4                                     */
     static int silk_schur64( /* O    returns residual energy                                     */
             int[] rc_Q16, /* O    Reflection coefficients [order] Q16                         */
             int[] c, /* I    Correlations [order+1]                                      */

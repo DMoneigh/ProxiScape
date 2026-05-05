@@ -13,7 +13,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.lang.annotation.Target;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -165,9 +164,7 @@ public class Microphone extends Thread {
                     if (muted)
                         continue;
 
-                    System.out.println("writing");
-
-                    soundManager.getClient().getPacketManager().writeLocationalVoiceData("" + playerInfo[0], (int) playerInfo[2], (int) playerInfo[3], (int) playerInfo[4], (int) playerInfo[5], opusBuffer, encoded);
+                    soundManager.getVoiceClient().getPacketManager().writeLocationalVoiceData("" + playerInfo[0], (int) playerInfo[2], (int) playerInfo[3], (int) playerInfo[4], (int) playerInfo[5], opusBuffer, encoded);
 //                   soundManager.getClient().getPacketManager().writeStaticVoiceData(opusBuffer, encoded);
                 }
             }

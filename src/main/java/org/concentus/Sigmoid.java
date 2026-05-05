@@ -37,15 +37,15 @@ package org.concentus;
 class Sigmoid {
 
     private static final int[] sigm_LUT_slope_Q10 = {
-        237, 153, 73, 30, 12, 7
+            237, 153, 73, 30, 12, 7
     };
 
     private static final int[] sigm_LUT_pos_Q15 = {
-        16384, 23955, 28861, 31213, 32178, 32548
+            16384, 23955, 28861, 31213, 32178, 32548
     };
 
     private static final int[] sigm_LUT_neg_Q15 = {
-        16384, 8812, 3906, 1554, 589, 219
+            16384, 8812, 3906, 1554, 589, 219
     };
 
     static int silk_sigm_Q15(int in_Q5) {

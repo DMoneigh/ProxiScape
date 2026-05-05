@@ -64,11 +64,12 @@ public class OpusPacketInfo {
      * Parse an opus packet into a packetinfo object containing one or more frames.
      * Opus_decode will perform this operation internally so most applications do
      * not need to use this function.
-     * @param packet The packet data to be parsed
+     *
+     * @param packet        The packet data to be parsed
      * @param packet_offset The index of the beginning of the packet in the data array (usually 0)
-     * @param len The packet's length
+     * @param len           The packet's length
      * @return A parsed packet info struct
-     * @throws OpusException 
+     * @throws OpusException
      */
     public static OpusPacketInfo parseOpusPacket(byte[] packet, int packet_offset, int len) throws OpusException {
         // Find the number of frames first
@@ -166,7 +167,7 @@ public class OpusPacketInfo {
     }
 
     public static int getNumSamples(byte[] packet, int packet_offset, int len,
-            int Fs) {
+                                    int Fs) {
         int samples;
         int count = getNumFrames(packet, packet_offset, len);
 
@@ -191,7 +192,7 @@ public class OpusPacketInfo {
     /// <param name="len">The packet's length</param>
     /// <returns>The size of the PCM samples that this packet will be decoded to by the specified decoder</returns>
     public static int getNumSamples(OpusDecoder dec,
-            byte[] packet, int packet_offset, int len) {
+                                    byte[] packet, int packet_offset, int len) {
         return getNumSamples(packet, packet_offset, len, dec.Fs);
     }
 
@@ -236,9 +237,9 @@ public class OpusPacketInfo {
     }
 
     static int opus_packet_parse_impl(byte[] data, int data_ptr, int len,
-            int self_delimited, BoxedValueByte out_toc,
-            byte[][] frames, int frames_ptr, short[] sizes, int sizes_ptr,
-            BoxedValueInt payload_offset, BoxedValueInt packet_offset) {
+                                      int self_delimited, BoxedValueByte out_toc,
+                                      byte[][] frames, int frames_ptr, short[] sizes, int sizes_ptr,
+                                      BoxedValueInt payload_offset, BoxedValueInt packet_offset) {
         int i, bytes;
         int count;
         int cbr;

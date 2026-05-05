@@ -127,14 +127,14 @@ class FindLTP {
             LinearAlgebra.silk_solve_LDL(WLTP, WLTP_ptr, SilkConstants.LTP_ORDER, Rr, b_Q16);
             /* WLTP_ptr and Rr_ptr both in Q(-corr_rshifts[k]) */
 
- /* Limit and store in Q14 */
+            /* Limit and store in Q14 */
             silk_fit_LTP(b_Q16, b_Q14, b_Q14_ptr);
 
             /* Calculate residual energy */
             nrg[k] = ResidualEnergy.silk_residual_energy16_covar(b_Q14, b_Q14_ptr, WLTP, WLTP_ptr, Rr, rr[k], SilkConstants.LTP_ORDER, 14);
             /* nrg in Q( -corr_rshifts[ k ] ) */
 
- /* temp = Wght[ k ] / ( nrg[ k ] * Wght[ k ] + 0.01f * subfr_length ); */
+            /* temp = Wght[ k ] / ( nrg[ k ] * Wght[ k ] + 0.01f * subfr_length ); */
             extra_shifts = Inlines.silk_min_int(corr_rshifts[k], LTP_CORRS_HEAD_ROOM);
             denom32 = Inlines.silk_LSHIFT_SAT32(Inlines.silk_SMULWB(nrg[k], Wght_Q15[k]), 1 + extra_shifts)
                     + /* Q( -corr_rshifts[ k ] + extra_shifts ) */ Inlines.silk_RSHIFT(Inlines.silk_SMULWB((int) subfr_length, 655), corr_rshifts[k] - extra_shifts);
@@ -147,7 +147,7 @@ class FindLTP {
             temp32 = Inlines.silk_RSHIFT(temp32, 31 + corr_rshifts[k] - extra_shifts - 26);
             /* Q26 */
 
- /* Limit temp such that the below scaling never wraps around */
+            /* Limit temp such that the below scaling never wraps around */
             WLTP_max = 0;
             for (i = WLTP_ptr; i < WLTP_ptr + (SilkConstants.LTP_ORDER * SilkConstants.LTP_ORDER); i++) {
                 WLTP_max = Inlines.silk_max(WLTP[i], WLTP_max);
@@ -198,7 +198,7 @@ class FindLTP {
         }
 
         /* smoothing */
- /* d = sum( B, 1 ); */
+        /* d = sum( B, 1 ); */
         b_Q14_ptr = 0;
         for (k = 0; k < nb_subfr; k++) {
             d_Q14[k] = 0;
@@ -210,13 +210,13 @@ class FindLTP {
 
         /* m = ( w * d' ) / ( sum( w ) + 1e-3 ); */
 
- /* Find maximum absolute value of d_Q14 and the bits used by w in Q0 */
+        /* Find maximum absolute value of d_Q14 and the bits used by w in Q0 */
         max_abs_d_Q14 = 0;
         max_w_bits = 0;
         for (k = 0; k < nb_subfr; k++) {
             max_abs_d_Q14 = Inlines.silk_max_32(max_abs_d_Q14, Inlines.silk_abs(d_Q14[k]));
             /* w[ k ] is in Q( 18 - corr_rshifts[ k ] ) */
- /* Find bits needed in Q( 18 - maxRshifts ) */
+            /* Find bits needed in Q( 18 - maxRshifts ) */
             max_w_bits = Inlines.silk_max_32(max_w_bits, 32 - Inlines.silk_CLZ32(w[k]) + corr_rshifts[k] - maxRshifts);
         }
 
@@ -278,7 +278,7 @@ class FindLTP {
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="LTP_coefs_Q16">[SilkConstants.LTP_ORDER]</param>
     /// <param name="LTP_coefs_Q14">[SilkConstants.LTP_ORDER]</param>

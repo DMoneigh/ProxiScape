@@ -68,7 +68,7 @@ class BWExpander {
         int chirp_minus_one_Q16 = chirp_Q16 - 65536;
 
         /* NB: Dont use silk_SMULWB, instead of silk_RSHIFT_ROUND( silk_MUL(), 16 ), below.  */
- /* Bias in silk_SMULWB can lead to unstable filters                                */
+        /* Bias in silk_SMULWB can lead to unstable filters                                */
         for (i = 0; i < d - 1; i++) {
             ar[i] = (short) Inlines.silk_RSHIFT_ROUND(Inlines.silk_MUL(chirp_Q16, ar[i]), 16);
             chirp_Q16 += Inlines.silk_RSHIFT_ROUND(Inlines.silk_MUL(chirp_Q16, chirp_minus_one_Q16), 16);

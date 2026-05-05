@@ -2,13 +2,14 @@ package com.jcscllc.proxiscape;
 
 import com.google.inject.Provides;
 import com.jcscllc.proxiscape.config.ProxiScapeConfig;
+import com.jcscllc.proxiscape.overlay.ProxiScapeOverlay;
 import com.jcscllc.proxiscape.voiceclient.VoiceClient;
 import com.jcscllc.proxiscape.voiceclient.sound.SoundManager;
 import com.jcscllc.proxiscape.voiceclient.sound.util.Microphone;
 import com.jcscllc.proxiscape.voiceclient.sound.util.Speaker;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.Player;
+import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
@@ -17,6 +18,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import javax.sound.sampled.Mixer;
@@ -31,10 +33,10 @@ import static net.runelite.api.GameState.LOGIN_SCREEN;
 )
 public class ProxiScapePlugin extends Plugin {
 
+    public static Object[] PLAYER_INFO;
+
     @Inject
     private Client client;
-
-    public static Object[] PLAYER_INFO;
 
     @Inject
     private ConfigManager configManager;
@@ -42,11 +44,28 @@ public class ProxiScapePlugin extends Plugin {
     @Inject
     private ProxiScapeConfig config;
 
+    @Inject
+    private OverlayManager overlayManager;
+
+    @Getter
+    @Inject
+    private ProxiScapeOverlay overlay;
+
     private VoiceClient voiceClient;
 
     @Provides
     ProxiScapeConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(ProxiScapeConfig.class);
+    }
+
+    @Override
+    protected void startUp() {
+        overlayManager.add(overlay);
+    }
+
+    @Override
+    protected void shutDown() {
+        overlayManager.remove(overlay);
     }
 
     @Subscribe
@@ -71,7 +90,7 @@ public class ProxiScapePlugin extends Plugin {
             }
         }
 
-        PLAYER_INFO = new Object[] {
+        PLAYER_INFO = new Object[]{
                 client.getAccountHash(),
                 player.getName(),
                 client.getWorld(),
@@ -110,7 +129,7 @@ public class ProxiScapePlugin extends Plugin {
             }
 
             try {
-                voiceClient = new VoiceClient();
+                voiceClient = new VoiceClient(this);
 
                 SoundManager newSoundManager = voiceClient.getSoundManager();
 
@@ -187,5 +206,20 @@ public class ProxiScapePlugin extends Plugin {
                 break;
 
         }
+    }
+
+    public boolean isPlayerIgnored(String name) {
+
+        NameableContainer<Ignore> ignores = client.getIgnoreContainer();
+
+        if (ignores == null)
+            return false;
+
+
+        for (Nameable ignored : ignores.getMembers())
+            if (ignored.getName().equalsIgnoreCase(name))
+                return true;
+
+        return false;
     }
 }

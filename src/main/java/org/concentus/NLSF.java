@@ -47,6 +47,10 @@ class NLSF {
     /* must be no higher than 16 - log2( LSF_COS_TAB_SZ ) */
 
     private static final int MAX_ITERATIONS_A2NLSF = 30;
+    /* This ordering was found to maximize quality. It improves numerical accuracy of
+           silk_NLSF2A_find_poly() compared to "standard" ordering. */
+    private static final byte[] ordering16 = {0, 15, 8, 7, 4, 11, 12, 3, 2, 13, 10, 5, 6, 9, 14, 1};
+    private static final byte[] ordering10 = {0, 9, 6, 3, 4, 5, 8, 1, 2, 7};
 
     /// <summary>
     /// Compute quantization errors for an LPC_order element input vector for a VQ codebook
@@ -134,9 +138,9 @@ class NLSF {
     /// <summary>
     /// Returns RD value in Q30
     /// </summary>
-    /// <param name="x_Q10">(O) Output [ order ]</param>
-    /// <param name="indices">(I) Quantization indices [ order ]</param>
-    /// <param name="pred_coef_Q8">(I) Backward predictor coefs [ order ]</param>
+    /// <param name="x_Q10">(O) Output [order]</param>
+    /// <param name="indices">(I) Quantization indices [order]</param>
+    /// <param name="pred_coef_Q8">(I) Backward predictor coefs [order]</param>
     /// <param name="quant_step_size_Q16">(I) Quantization step size</param>
     /// <param name="order">(I) Number of input values</param>
     static void silk_NLSF_residual_dequant(
@@ -166,8 +170,8 @@ class NLSF {
     /// <summary>
     /// Unpack predictor values and indices for entropy coding tables
     /// </summary>
-    /// <param name="ec_ix">(O) Indices to entropy tables [ LPC_ORDER ]</param>
-    /// <param name="pred_Q8">(O) LSF predictor [ LPC_ORDER ]</param>
+    /// <param name="ec_ix">(O) Indices to entropy tables [LPC_ORDER]</param>
+    /// <param name="pred_Q8">(O) LSF predictor [LPC_ORDER]</param>
     /// <param name="psNLSF_CB">(I) Codebook object</param>
     /// <param name="CB1_index">(I) Index of vector in first LSF codebook</param>
     static void silk_NLSF_unpack(short[] ec_ix, short[] pred_Q8, NLSFCodebook psNLSF_CB, int CB1_index) {
@@ -295,8 +299,8 @@ class NLSF {
     /// <summary>
     /// NLSF vector decoder
     /// </summary>
-    /// <param name="pNLSF_Q15">(O) Quantized NLSF vector [ LPC_ORDER ]</param>
-    /// <param name="NLSFIndices">(I) Codebook path vector [ LPC_ORDER + 1 ]</param>
+    /// <param name="pNLSF_Q15">(O) Quantized NLSF vector [LPC_ORDER]</param>
+    /// <param name="NLSFIndices">(I) Codebook path vector [LPC_ORDER+1]</param>
     /// <param name="psNLSF_CB">(I) Codebook object</param>
     static void silk_NLSF_decode(short[] pNLSF_Q15, byte[] NLSFIndices, NLSFCodebook psNLSF_CB) {
         int i;
@@ -306,7 +310,7 @@ class NLSF {
         short[] W_tmp_QW = new short[psNLSF_CB.order];
         int W_tmp_Q9, NLSF_Q15_tmp;
 
-        // Decode first stage 
+        // Decode first stage
         short[] pCB = psNLSF_CB.CB1_NLSF_Q8;
         int pCB_element = NLSFIndices[0] * psNLSF_CB.order;
 
@@ -342,11 +346,11 @@ class NLSF {
     /// <summary>
     /// Delayed-decision quantizer for NLSF residuals
     /// </summary>
-    /// <param name="indices">(O) Quantization indices [ order ]</param>
-    /// <param name="x_Q10">(O) Input [ order ]</param>
-    /// <param name="w_Q5">(I) Weights [ order ] </param>
-    /// <param name="pred_coef_Q8">(I) Backward predictor coefs [ order ]</param>
-    /// <param name="ec_ix">(I) Indices to entropy coding tables [ order ]</param>
+    /// <param name="indices">(O) Quantization indices [order]</param>
+    /// <param name="x_Q10">(O) Input [order]</param>
+    /// <param name="w_Q5">(I) Weights [order] </param>
+    /// <param name="pred_coef_Q8">(I) Backward predictor coefs [order]</param>
+    /// <param name="ec_ix">(I) Indices to entropy coding tables [order]</param>
     /// <param name="ec_rates_Q5">(I) Rates []</param>
     /// <param name="quant_step_size_Q16">(I) Quantization step size</param>
     /// <param name="inv_quant_step_size_Q6">(I) Inverse quantization step size</param>
@@ -409,7 +413,7 @@ class NLSF {
         RD_Q25[0] = 0;
         prev_out_Q10[0] = 0;
 
-        for (i = order - 1;; i--) {
+        for (i = order - 1; ; i--) {
             pred_coef_Q16 = Inlines.silk_LSHIFT((int) pred_coef_Q8[i], 8);
             in_Q10 = x_Q10[i];
 
@@ -558,10 +562,10 @@ class NLSF {
     /// <summary>
     /// NLSF vector encoder
     /// </summary>
-    /// <param name="NLSFIndices">(I) Codebook path vector [ LPC_ORDER + 1 ]</param>
-    /// <param name="pNLSF_Q15">(I/O) Quantized NLSF vector [ LPC_ORDER ]</param>
+    /// <param name="NLSFIndices">(I) Codebook path vector [LPC_ORDER+1]</param>
+    /// <param name="pNLSF_Q15">(I/O) Quantized NLSF vector [LPC_ORDER]</param>
     /// <param name="psNLSF_CB">(I) Codebook object</param>
-    /// <param name="pW_QW">(I) NLSF weight vector [ LPC_ORDER ]</param>
+    /// <param name="pW_QW">(I) NLSF weight vector [LPC_ORDER]</param>
     /// <param name="NLSF_mu_Q20">(I) Rate weight for the RD optimization</param>
     /// <param name="nSurvivors">(I) Max survivors after first stage</param>
     /// <param name="signalType">(I) Signal type: 0/1/2</param>
@@ -702,16 +706,11 @@ class NLSF {
         }
     }
 
-    /* This ordering was found to maximize quality. It improves numerical accuracy of
-           silk_NLSF2A_find_poly() compared to "standard" ordering. */
-    private static final byte[] ordering16 = {0, 15, 8, 7, 4, 11, 12, 3, 2, 13, 10, 5, 6, 9, 14, 1};
-    private static final byte[] ordering10 = {0, 9, 6, 3, 4, 5, 8, 1, 2, 7};
-
     /// <summary>
     /// compute whitening filter coefficients from normalized line spectral frequencies
     /// </summary>
-    /// <param name="a_Q12">(O) monic whitening filter coefficients in Q12,  [ d ]</param>
-    /// <param name="NLSF">(I) normalized line spectral frequencies in Q15, [ d ]</param>
+    /// <param name="a_Q12">(O) monic whitening filter coefficients in Q12,  [d]</param>
+    /// <param name="NLSF">(I) normalized line spectral frequencies in Q15, [d]</param>
     /// <param name="d">(I) filter order (should be even)</param>
     static void silk_NLSF2A(
             short[] a_Q12,
@@ -752,7 +751,7 @@ class NLSF {
             delta = SilkTables.silk_LSFCosTab_Q12[f_int + 1] - cos_val;
             /* Q12, with a range of 0..200 */
 
- /* Linear interpolation */
+            /* Linear interpolation */
             cos_LSF_QA[ordering[k]] = Inlines.silk_RSHIFT_ROUND(Inlines.silk_LSHIFT(cos_val, 8) + Inlines.silk_MUL(delta, f_frac), 20 - QA);
             /* QA */
         }
@@ -795,7 +794,7 @@ class NLSF {
                 maxabs = Inlines.silk_min(maxabs, 163838);
                 /* ( silk_int32_MAX >> 14 ) + silk_int16_MAX = 163838 */
                 sc_Q16 = ((int) ((0.999f) * ((long) 1 << (16)) + 0.5))/*Inlines.SILK_CONST(0.999f, 16)*/ - Inlines.silk_DIV32(Inlines.silk_LSHIFT(maxabs - Short.MAX_VALUE, 14),
-                                Inlines.silk_RSHIFT32(Inlines.silk_MUL(maxabs, idx + 1), 2));
+                        Inlines.silk_RSHIFT32(Inlines.silk_MUL(maxabs, idx + 1), 2));
                 Filters.silk_bwexpander_32(a32_QA1, d, sc_Q16);
             } else {
                 break;
@@ -819,7 +818,7 @@ class NLSF {
         for (i = 0; i < SilkConstants.MAX_LPC_STABILIZE_ITERATIONS; i++) {
             if (Filters.silk_LPC_inverse_pred_gain(a_Q12, d) < ((int) ((1.0f / SilkConstants.MAX_PREDICTION_POWER_GAIN) * ((long) 1 << (30)) + 0.5))/*Inlines.SILK_CONST(1.0f / SilkConstants.MAX_PREDICTION_POWER_GAIN, 30)*/) {
                 /* Prediction coefficients are (too close to) unstable; apply bandwidth expansion   */
- /* on the unscaled coefficients, convert to Q12 and measure again                   */
+                /* on the unscaled coefficients, convert to Q12 and measure again                   */
                 Filters.silk_bwexpander_32(a32_QA1, d, 65536 - Inlines.silk_LSHIFT(2, i));
 
                 for (k = 0; k < d; k++) {
@@ -900,8 +899,8 @@ class NLSF {
         }
 
         /* Divide out zeros as we have that for even filter orders, */
- /* z =  1 is always a root in Q, and                        */
- /* z = -1 is always a root in P                             */
+        /* z =  1 is always a root in Q, and                        */
+        /* z = -1 is always a root in P                             */
         for (k = dd; k > 0; k--) {
             P[k - 1] -= P[k];
             Q[k - 1] += Q[k];
@@ -972,7 +971,7 @@ class NLSF {
             if ((ylo <= 0 && yhi >= thr) || (ylo >= 0 && yhi <= -thr)) {
                 if (yhi == 0) {
                     /* If the root lies exactly at the end of the current       */
- /* interval, look for the next root in the next interval    */
+                    /* interval, look for the next root in the next interval    */
                     thr = 1;
                 } else {
                     thr = 0;
@@ -1078,7 +1077,7 @@ class NLSF {
     /// Limit, stabilize, convert and quantize NLSFs
     /// </summary>
     /// <param name="psEncC">I/O  Encoder state</param>
-    /// <param name="PredCoef_Q12">O    Prediction coefficients [ 2 ][MAX_LPC_ORDER]</param>
+    /// <param name="PredCoef_Q12">O    Prediction coefficients [2 ][MAX_LPC_ORDER]</param>
     /// <param name="pNLSF_Q15">I/O  Normalized LSFs (quant out) (0 - (2^15-1)) [MAX_LPC_ORDER]</param>
     /// <param name="prev_NLSFq_Q15">I    Previous Normalized LSFs (0 - (2^15-1)) [MAX_LPC_ORDER]</param>
     static void silk_process_NLSFs(

@@ -20,7 +20,7 @@ public class SoundManager {
     );
 
     @Getter
-    private VoiceClient client;
+    private VoiceClient voiceClient;
 
     @Setter
     @Getter
@@ -30,8 +30,8 @@ public class SoundManager {
     @Getter
     private Speaker speaker;
 
-    public SoundManager(VoiceClient client) {
-        this.client = client;
+    public SoundManager(VoiceClient voiceClient) {
+        this.voiceClient = voiceClient;
 
         microphone = new Microphone(this);
 

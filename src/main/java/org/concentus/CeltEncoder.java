@@ -36,6 +36,8 @@ package org.concentus;
 
 class CeltEncoder {
 
+    final int[] preemph_memE = new int[2];
+    final int[] preemph_memD = new int[2];
     CeltMode mode = null;
     /**
      * < Mode used by the encoder. Without custom modes, this always refers to
@@ -43,7 +45,6 @@ class CeltEncoder {
      */
     int channels = 0;
     int stream_channels = 0;
-
     int force_intra = 0;
     int clip = 0;
     int disable_pf = 0;
@@ -51,18 +52,15 @@ class CeltEncoder {
     int upsample = 0;
     int start = 0;
     int end = 0;
-
     int bitrate = 0;
     int vbr = 0;
     int signalling = 0;
-
     /* If zero, VBR can do whatever it likes with the rate */
     int constrained_vbr = 0;
     int loss_rate = 0;
     int lsb_depth = 0;
     OpusFramesize variable_duration = OpusFramesize.OPUS_FRAMESIZE_UNKNOWN;
     int lfe = 0;
-
     /* Everything beyond this point gets cleared on a reset */
     int rng = 0;
     int spread_decision = 0;
@@ -71,16 +69,11 @@ class CeltEncoder {
     int lastCodedBands = 0;
     int hf_average = 0;
     int tapset_decision = 0;
-
     int prefilter_period = 0;
     int prefilter_gain = 0;
     int prefilter_tapset = 0;
     int consec_transient = 0;
     AnalysisInfo analysis = new AnalysisInfo();
-
-    final int[] preemph_memE = new int[2];
-    final int[] preemph_memD = new int[2];
-
     /* VBR-related parameters */
     int vbr_reservoir = 0;
     int vbr_drift = 0;
@@ -193,7 +186,7 @@ class CeltEncoder {
     }
 
     int opus_custom_encoder_init_arch(CeltMode mode,
-            int channels) {
+                                      int channels) {
         if (channels < 0 || channels > 2) {
             return OpusError.OPUS_BAD_ARG;
         }
@@ -242,7 +235,7 @@ class CeltEncoder {
     }
 
     int run_prefilter(int[][] input, int[][] prefilter_mem, int CC, int N,
-            int prefilter_tapset, BoxedValueInt pitch, BoxedValueInt gain, BoxedValueInt qgain, int enabled, int nbAvailableBytes) {
+                      int prefilter_tapset, BoxedValueInt pitch, BoxedValueInt gain, BoxedValueInt qgain, int enabled, int nbAvailableBytes) {
         int c;
         int[][] pre = new int[CC][];
         CeltMode mode; // [porting note] pointer
@@ -507,7 +500,7 @@ class CeltEncoder {
                     was entirely empty, but to allow 0 in hybrid mode. */
                 vbr_bound = vbr_rate;
                 max_allowed = Inlines.IMIN(Inlines.IMAX(tell == 1 ? 2 : 0,
-                        (vbr_rate + vbr_bound - this.vbr_reservoir) >> (EntropyCoder.BITRES + 3)),
+                                (vbr_rate + vbr_bound - this.vbr_reservoir) >> (EntropyCoder.BITRES + 3)),
                         nbAvailableBytes);
                 if (max_allowed < nbAvailableBytes) {
                     nbCompressedBytes = nbFilledBytes + max_allowed;
@@ -850,7 +843,7 @@ class CeltEncoder {
                 this.hf_average = boxed_hf_average.Val;
 
                 /*printf("%d %d\n", st.tapset_decision, st.spread_decision);*/
- /*printf("%f %d %f %d\n\n", st.analysis.tonality, st.spread_decision, st.analysis.tonality_slope, st.tapset_decision);*/
+                /*printf("%f %d %f %d\n\n", st.analysis.tonality, st.spread_decision, st.analysis.tonality_slope, st.tapset_decision);*/
             }
             enc.enc_icdf(this.spread_decision, CeltTables.spread_icdf, 5);
         }
@@ -996,7 +989,7 @@ class CeltEncoder {
             }
             /*printf ("%d\n", st.vbr_reservoir);*/
 
- /* Compute the offset we need to apply in order to reach the target */
+            /* Compute the offset we need to apply in order to reach the target */
             if (this.constrained_vbr != 0) {
                 this.vbr_drift += (int) Inlines.MULT16_32_Q15(alpha, (delta * (1 << lm_diff)) - this.vbr_offset - this.vbr_drift);
                 this.vbr_offset = -this.vbr_drift;
@@ -1013,7 +1006,7 @@ class CeltEncoder {
             }
             nbCompressedBytes = Inlines.IMIN(nbCompressedBytes, nbAvailableBytes + nbFilledBytes);
             /*printf("%d\n", nbCompressedBytes*50*8);*/
- /* This moves the raw bits to take into account the new compressed size */
+            /* This moves the raw bits to take into account the new compressed size */
             enc.enc_shrink(nbCompressedBytes);
         }
 

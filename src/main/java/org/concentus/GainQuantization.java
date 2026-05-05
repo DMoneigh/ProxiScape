@@ -42,7 +42,7 @@ class GainQuantization {
     /// </summary>
     /// <param name="ind">O    gain indices [MAX_NB_SUBFR]</param>
     /// <param name="gain_Q16">I/O  gains (quantized out) [MAX_NB_SUBFR]</param>
-    /// <param name="prev_ind">I/O  last index in previous frame. [Porting note] original implementation passed this as an int8*</param>
+    /// <param name="prev_ind">I/O  last index in previous frame. [Portingnote] original implementation passed this as an int8*</param>
     /// <param name="conditional">I    first gain is delta coded if 1</param>
     /// <param name="nb_subfr">I    number of subframes</param>
     static void silk_gains_quant(
@@ -105,7 +105,7 @@ class GainQuantization {
     /// </summary>
     /// <param name="gain_Q16">O    quantized gains [MAX_NB_SUBFR]</param>
     /// <param name="ind">I    gain indices [MAX_NB_SUBFR]</param>
-    /// <param name="prev_ind">I/O  last index in previous frame [Porting note] original implementation passed this as an int8*</param>
+    /// <param name="prev_ind">I/O  last index in previous frame [Portingnote] original implementation passed this as an int8*</param>
     /// <param name="conditional">I    first gain is delta coded if 1</param>
     /// <param name="nb_subfr">I    number of subframes</param>
     static void silk_gains_dequant(

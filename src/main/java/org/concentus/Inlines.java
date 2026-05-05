@@ -35,6 +35,9 @@ package org.concentus;
 
 class Inlines {
 
+    private static short[] sqrt_C = {23175, 11561, -3011, 1699, -664};
+    private static short log2_C0 = -6801 + (1 << (3));
+
     static void OpusAssert(boolean condition) {
         if (!condition) {
             throw new AssertionError();
@@ -614,8 +617,6 @@ class Inlines {
         return g;
     }
 
-    private static short[] sqrt_C = {23175, 11561, -3011, 1699, -664};
-
     /**
      * Sqrt approximation (QX input, QX/2 output)
      */
@@ -716,8 +717,6 @@ class Inlines {
             return SHL32(result, 2);
         }
     }
-
-    private static short log2_C0 = -6801 + (1 << (3));
 
     /**
      * Base-2 logarithm approximation (log2(x)). (Q14 input, Q10 output)
@@ -822,6 +821,7 @@ class Inlines {
     }
 
     // SILK-SPECIFIC INLINES
+
     /// <summary>
     /// Rotate a32 right by 'rot' bits. Negative rot values result in rotating
     /// left. Output is 32bit int.
@@ -1038,6 +1038,7 @@ class Inlines {
 
     ///* Saturation for positive input values */
     //#define silk_POS_SAT32(a)                   ((a) > int_MAX ? int_MAX : (a))
+
     /// <summary>
     /// Add with saturation for positive input values
     /// </summary>
@@ -1344,24 +1345,24 @@ class Inlines {
         b32_nrm = silk_LSHIFT(b32, b_headrm);
         /* Q: b_headrm                  */
 
- /* Inverse of b32, with 14 bits of precision */
+        /* Inverse of b32, with 14 bits of precision */
         b32_inv = silk_DIV32_16(Integer.MAX_VALUE >> 2, silk_RSHIFT(b32_nrm, 16));
         /* Q: 29 + 16 - b_headrm        */
 
- /* First approximation */
+        /* First approximation */
         result = silk_SMULWB(a32_nrm, b32_inv);
         /* Q: 29 + a_headrm - b_headrm  */
 
- /* Compute residual by subtracting product of denominator and first approximation */
- /* It's OK to overflow because the final value of a32_nrm should always be small */
+        /* Compute residual by subtracting product of denominator and first approximation */
+        /* It's OK to overflow because the final value of a32_nrm should always be small */
         a32_nrm = silk_SUB32_ovflw(a32_nrm, silk_LSHIFT_ovflw(silk_SMMUL(b32_nrm, result), 3));
         /* Q: a_headrm   */
 
- /* Refinement */
+        /* Refinement */
         result = silk_SMLAWB(result, a32_nrm, b32_inv);
         /* Q: 29 + a_headrm - b_headrm  */
 
- /* Convert to Qres domain */
+        /* Convert to Qres domain */
         lshift = 29 + a_headrm - b_headrm - Qres;
         if (lshift < 0) {
             return silk_LSHIFT_SAT32(result, -lshift);
@@ -1391,23 +1392,23 @@ class Inlines {
         b32_nrm = silk_LSHIFT(b32, b_headrm);
         /* Q: b_headrm                */
 
- /* Inverse of b32, with 14 bits of precision */
+        /* Inverse of b32, with 14 bits of precision */
         b32_inv = silk_DIV32_16(Integer.MAX_VALUE >> 2, (short) (silk_RSHIFT(b32_nrm, 16)));
         /* Q: 29 + 16 - b_headrm    */
 
- /* First approximation */
+        /* First approximation */
         result = silk_LSHIFT(b32_inv, 16);
         /* Q: 61 - b_headrm            */
 
- /* Compute residual by subtracting product of denominator and first approximation from one */
+        /* Compute residual by subtracting product of denominator and first approximation from one */
         err_Q32 = silk_LSHIFT(((int) 1 << 29) - silk_SMULWB(b32_nrm, b32_inv), 3);
         /* Q32                        */
 
- /* Refinement */
+        /* Refinement */
         result = silk_SMLAWW(result, err_Q32, b32_inv);
         /* Q: 61 - b_headrm            */
 
- /* Convert to Qres domain */
+        /* Convert to Qres domain */
         lshift = 61 - b_headrm - Qres;
         if (lshift <= 0) {
             return silk_LSHIFT_SAT32(result, -lshift);
@@ -1419,7 +1420,7 @@ class Inlines {
         }
     }
 
-    //////////////////////// from macros.h /////////////////////////////////////////////
+    /// ///////////////////// from macros.h /////////////////////////////////////////////
     /// <summary>
     /// a32 + (b32 * (int)((short)(c32))) >> 16 output have to be 32bit int
     /// </summary>
@@ -1431,22 +1432,22 @@ class Inlines {
         return ret;
     }
 
-    ///* (a32 * (b32 >> 16)) >> 16 */
+    /// * (a32 * (b32 >> 16)) >> 16 */
     static int silk_SMULWT(int a32, int b32) {
         return (((a32) >> 16) * ((b32) >> 16) + ((((a32) & 0x0000FFFF) * ((b32) >> 16)) >> 16));
     }
 
-    ///* (int)((short)(a32)) * (b32 >> 16) */
+    /// * (int)((short)(a32)) * (b32 >> 16) */
     static int silk_SMULBT(int a32, int b32) {
         return ((int) ((short) (a32)) * ((b32) >> 16));
     }
 
-    ///* a32 + (int)((short)(b32)) * (c32 >> 16) */
+    /// * a32 + (int)((short)(b32)) * (c32 >> 16) */
     static int silk_SMLABT(int a32, int b32, int c32) {
         return ((a32) + ((int) ((short) (b32))) * ((c32) >> 16));
     }
 
-    ///* a64 + (b32 * c32) */
+    /// * a64 + (b32 * c32) */
     static long silk_SMLAL(long a64, int b32, int c32) {
         return (silk_ADD64((a64), ((long) (b32) * (long) (c32))));
     }

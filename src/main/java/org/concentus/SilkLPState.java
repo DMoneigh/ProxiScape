@@ -59,9 +59,9 @@ class SilkLPState {
     }
 
     /* Low-pass filter with variable cutoff frequency based on  */
- /* piece-wise linear interpolation between elliptic filters */
- /* Start by setting psEncC.mode <> 0;                      */
- /* Deactivate by setting psEncC.mode = 0;                  */
+    /* piece-wise linear interpolation between elliptic filters */
+    /* Start by setting psEncC.mode <> 0;                      */
+    /* Deactivate by setting psEncC.mode = 0;                  */
     void silk_LP_variable_cutoff(
             short[] frame, /* I/O  Low-pass filtered output signal             */
             int frame_ptr,

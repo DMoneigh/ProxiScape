@@ -34,7 +34,7 @@ package org.concentus;
 class EncodePulses {
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="pulses_comb">(O)</param>
     /// <param name="pulses_in">(I)</param>
@@ -60,7 +60,7 @@ class EncodePulses {
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="pulses_comb">(O)</param>
     /// <param name="pulses_in">(I)</param>

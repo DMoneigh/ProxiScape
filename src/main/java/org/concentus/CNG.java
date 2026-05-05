@@ -117,7 +117,7 @@ class CNG {
         if (psDec.lossCnt == 0 && psDec.prevSignalType == SilkConstants.TYPE_NO_VOICE_ACTIVITY) {
             /* Update CNG parameters */
 
- /* Smoothing of LSF's  */
+            /* Smoothing of LSF's  */
             for (i = 0; i < psDec.LPC_order; i++) {
                 psCNG.CNG_smth_NLSF_Q15[i] += (short) (Inlines.silk_SMULWB((int) psDec.prevNLSF_Q15[i] - (int) psCNG.CNG_smth_NLSF_Q15[i], SilkConstants.CNG_NLSF_SMTH_Q16));
             }

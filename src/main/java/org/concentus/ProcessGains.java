@@ -53,7 +53,7 @@ class ProcessGains {
         }
 
         /* Limit the quantized signal */
- /* InvMaxSqrVal = pow( 2.0f, 0.33f * ( 21.0f - SNR_dB ) ) / subfr_length; */
+        /* InvMaxSqrVal = pow( 2.0f, 0.33f * ( 21.0f - SNR_dB ) ) / subfr_length; */
         InvMaxSqrVal_Q16 = Inlines.silk_DIV32_16(Inlines.silk_log2lin(
                 Inlines.silk_SMULWB(((int) ((21 + 16 / 0.33f) * ((long) 1 << (7)) + 0.5))/*Inlines.SILK_CONST(21 + 16 / 0.33f, 7)*/ - psEnc.SNR_dB_Q7, ((int) ((0.33f) * ((long) 1 << (16)) + 0.5))/*Inlines.SILK_CONST(0.33f, 16)*/)), psEnc.subfr_length);
 
