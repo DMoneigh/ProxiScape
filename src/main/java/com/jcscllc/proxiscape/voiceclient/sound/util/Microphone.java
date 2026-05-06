@@ -122,14 +122,6 @@ public class Microphone extends Thread {
             mic.close();
     }
 
-    public void mute() {
-        muted = true;
-    }
-
-    public void unmute() {
-        muted = false;
-    }
-
     @Override
     public void run() {
         try {
@@ -161,7 +153,8 @@ public class Microphone extends Thread {
                 if (ProxiScapePlugin.PLAYER_INFO != null) {
                     Object[] playerInfo = ProxiScapePlugin.PLAYER_INFO;
 
-                    if (muted)
+
+                    if (soundManager.getVoiceClient().getPlugin().getConfig().muted())
                         continue;
 
                     soundManager.getVoiceClient().getPacketManager().writeLocationalVoiceData("" + playerInfo[0], (int) playerInfo[2], (int) playerInfo[3], (int) playerInfo[4], (int) playerInfo[5], opusBuffer, encoded);

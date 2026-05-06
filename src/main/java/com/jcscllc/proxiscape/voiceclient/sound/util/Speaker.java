@@ -137,14 +137,6 @@ public class Speaker extends Thread {
             spkr.close();
     }
 
-    public void deafen() {
-        deafened = true;
-    }
-
-    public void undeafen() {
-        deafened = false;
-    }
-
     @Override
     public void run() {
         try {
@@ -180,7 +172,7 @@ public class Speaker extends Thread {
                     pcmBytes[i * 2 + 1] = (byte) ((pcmOut[i] >> 8) & 0xff);
                 }
 
-                if (deafened)
+                if (soundManager.getVoiceClient().getPlugin().getConfig().deafened())
                     continue;
 
                 int x1 = (int) ProxiScapePlugin.PLAYER_INFO[3];

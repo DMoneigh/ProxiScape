@@ -41,6 +41,7 @@ public class ProxiScapePlugin extends Plugin {
     @Inject
     private ConfigManager configManager;
 
+    @Getter
     @Inject
     private ProxiScapeConfig config;
 
@@ -185,20 +186,6 @@ public class ProxiScapePlugin extends Plugin {
                 }
 
                 manager.getSpeaker().chooseSpeaker();
-                break;
-
-            case "muted":
-                if (newValue.equals("true"))
-                    microphone.mute();
-                else
-                    microphone.unmute();
-                break;
-
-            case "deafened":
-                if (newValue.equals("true"))
-                    speaker.deafen();
-                else
-                    speaker.undeafen();
                 break;
 
             default:
