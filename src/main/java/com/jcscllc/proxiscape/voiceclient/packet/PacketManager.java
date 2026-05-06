@@ -35,14 +35,14 @@ public class PacketManager {
 
     private static final byte NO_PACKET = 0x9;
 
-    private final VoiceClient client;
+    private final VoiceClient voiceClient;
 
     private final InetSocketAddress sock;
 
     private boolean running;
 
-    public PacketManager(VoiceClient client) {
-        this.client = client;
+    public PacketManager(VoiceClient voiceClient) {
+        this.voiceClient = voiceClient;
 
         sock = new InetSocketAddress(VOICE_SERVER_IP, VOICE_SERVER_PORT);
 
@@ -84,7 +84,7 @@ public class PacketManager {
 
                 byte[] opusIn = fbb.readBytes(length);
 
-                client.getSoundManager().getSpeaker().queueLocationalSoundPacket(opusIn, name, world, x, y, plane);
+                voiceClient.getSoundManager().getSpeaker().queueLocationalSoundPacket(opusIn, name, world, x, y, plane);
                 break;
 
             case STATIC_VOICE_PACKET:
@@ -92,7 +92,7 @@ public class PacketManager {
 
                 opusIn = fbb.readBytes(length);
 
-                client.getSoundManager().getSpeaker().queueStaticSoundPacket(opusIn);
+                voiceClient.getSoundManager().getSpeaker().queueStaticSoundPacket(opusIn);
                 break;
 
             case PONG_PACKET:
@@ -119,7 +119,7 @@ public class PacketManager {
         fbb.writeBytes(array, array.length); //Append data
 
         byte[] writable = fbb.toByteArray();
-        client.getSocket().send(new DatagramPacket(writable, writable.length, to));
+        voiceClient.getSocket().send(new DatagramPacket(writable, writable.length, to));
     }
 
     public void writeAuthenticatePacket(String hash, String username) throws Exception {

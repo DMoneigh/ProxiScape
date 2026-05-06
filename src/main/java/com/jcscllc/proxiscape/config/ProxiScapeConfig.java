@@ -45,6 +45,7 @@ public interface ProxiScapeConfig extends Config {
             keyName = "muted",
             name = "Mute Microphone",
             description = "If checked, people cannot hear you.",
+            position = 1,
             section = voiceControl
     )
     default boolean muted() {
@@ -55,6 +56,7 @@ public interface ProxiScapeConfig extends Config {
             keyName = "deafened",
             name = "Deafen Speaker",
             description = "If checked, you cannot hear people.",
+            position = 2,
             section = voiceControl
     )
     default boolean deafened() {
