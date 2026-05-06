@@ -195,7 +195,6 @@ public class Speaker extends Thread {
 
                 float distance = (float) Math.sqrt(dx * dx + dy * dy);
 
-                System.out.println(distance);
                 if (distance != 0.0F)
                     applyGain(pcmBytes, decoded * 2, 1.0F - (distance / 20.0F));
 
