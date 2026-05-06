@@ -29,7 +29,7 @@ import static net.runelite.api.GameState.LOGIN_SCREEN;
 
 @Slf4j
 @PluginDescriptor(
-        name = "ProxiScape"
+        name = "Proximity Voice Chat"
 )
 public class ProxiScapePlugin extends Plugin {
 
@@ -59,9 +59,7 @@ public class ProxiScapePlugin extends Plugin {
     }
 
     @Override
-    protected void startUp() {
-        overlayManager.add(overlay);
-    }
+    protected void startUp() { overlayManager.add(overlay); }
 
     @Override
     protected void shutDown() {
