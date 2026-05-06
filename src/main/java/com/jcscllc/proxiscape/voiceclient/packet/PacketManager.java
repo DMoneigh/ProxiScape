@@ -144,7 +144,7 @@ public class PacketManager {
         write(PING_PACKET, sock, buf);
     }
 
-    public void writePositionUpdatePacket(String hash, int world, int x, int y) throws Exception {
+    public void writeUpdatePositionPacket(String hash, int world, int x, int y) throws Exception {
         FriendlyByteBuf buf = new FriendlyByteBuf(5000);
         buf.writeUtf(hash);
         buf.writeInt(world);

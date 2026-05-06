@@ -159,16 +159,12 @@ public class Speaker extends Thread {
             OpusDecoder decoder = new OpusDecoder(16000, 1);
 
             while (running) {
-                Object[] soundPacket = locationalSoundPackets.poll(10, TimeUnit.MILLISECONDS);
+                Object[] soundPacket = locationalSoundPackets.take();
 
-                //TODO add check ignore list
-                if (
-                        soundPacket == null ||
-                                spkr == null ||
-                                soundPacket[2] != ProxiScapePlugin.PLAYER_INFO[2] ||
-                                soundPacket[5] != ProxiScapePlugin.PLAYER_INFO[5] ||
-                                soundManager.getVoiceClient().getPlugin().isPlayerIgnored((String) soundPacket[1])
-                )
+                if (spkr == null ||
+                        soundPacket[2] != ProxiScapePlugin.PLAYER_INFO[2] ||
+                        soundPacket[5] != ProxiScapePlugin.PLAYER_INFO[5] ||
+                        soundManager.getVoiceClient().getPlugin().isPlayerIgnored((String) soundPacket[1]))
                     continue;
 
                 byte[] opusData = (byte[]) soundPacket[0];
@@ -199,6 +195,7 @@ public class Speaker extends Thread {
 
                 float distance = (float) Math.sqrt(dx * dx + dy * dy);
 
+                System.out.println(distance);
                 if (distance != 0.0F)
                     applyGain(pcmBytes, decoded * 2, 1.0F - (distance / 20.0F));
 

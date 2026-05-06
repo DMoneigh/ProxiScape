@@ -70,6 +70,7 @@ public class ProxiScapePlugin extends Plugin {
 
     @Subscribe
     public void onGameTick(GameTick event) {
+
         Player player = client.getLocalPlayer();
 
         if (player == null)
@@ -100,7 +101,7 @@ public class ProxiScapePlugin extends Plugin {
         };
 
         try {
-            voiceClient.getPacketManager().writePositionUpdatePacket(client.getAccountHash() + "", client.getWorld(), x, y);
+            voiceClient.getPacketManager().writeUpdatePositionPacket(client.getAccountHash() + "", client.getWorld(), x, y);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -214,7 +215,6 @@ public class ProxiScapePlugin extends Plugin {
 
         if (ignores == null)
             return false;
-
 
         for (Nameable ignored : ignores.getMembers())
             if (ignored.getName().equalsIgnoreCase(name))
