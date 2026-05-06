@@ -162,8 +162,8 @@ public class Speaker extends Thread {
                 Object[] soundPacket = locationalSoundPackets.take();
 
                 if (spkr == null ||
-                        soundPacket[2] != ProxiScapePlugin.PLAYER_INFO[2] ||
-                        soundPacket[5] != ProxiScapePlugin.PLAYER_INFO[5] ||
+                        ((int) ProxiScapePlugin.PLAYER_INFO[5] != (int) soundPacket[5]) ||
+                        ((int) ProxiScapePlugin.PLAYER_INFO[2] != (int) soundPacket[2]) ||
                         soundManager.getVoiceClient().getPlugin().isPlayerIgnored((String) soundPacket[1]))
                     continue;
 
