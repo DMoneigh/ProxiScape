@@ -14,6 +14,7 @@ public interface ProxiScapeConfig extends Config {
             position = 1
     )
     String voiceSetup = "voiceSetup";
+
     @ConfigSection(
             name = "Voice Control",
             description = "Mute microphone or deafen speaker.",

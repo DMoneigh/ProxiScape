@@ -60,10 +60,20 @@ public class ProxiScapePlugin extends Plugin {
     }
 
     @Override
-    protected void startUp() { overlayManager.add(overlay); }
+    protected void startUp() {
+
+        if (client.getLocalPlayer() != null)
+            startVoiceClient();
+
+        overlayManager.add(overlay);
+
+    }
 
     @Override
     protected void shutDown() {
+
+        stopVoiceClient();
+
         overlayManager.remove(overlay);
     }
 
@@ -109,42 +119,48 @@ public class ProxiScapePlugin extends Plugin {
     @Subscribe
     public void onGameStateChanged(GameStateChanged gameStateChanged) {
 
-        if (gameStateChanged.getGameState() == LOGIN_SCREEN) {
-            if (voiceClient != null && voiceClient.isRunning())
-                voiceClient.end();
+        if (gameStateChanged.getGameState() == LOGIN_SCREEN)
+            stopVoiceClient();
+        else if (gameStateChanged.getGameState() == LOGGED_IN)
+            startVoiceClient();
+    }
 
-            PLAYER_INFO = null;
-        } else if (gameStateChanged.getGameState() == LOGGED_IN) {
-            Mixer.Info micInfo = null;
-            Mixer.Info speakerInfo = null;
+    private void startVoiceClient() {
+        Mixer.Info micInfo = null;
+        Mixer.Info speakerInfo = null;
 
-            if (voiceClient != null) {
-                SoundManager oldSoundManager = voiceClient.getSoundManager();
+        if (voiceClient != null) {
+            SoundManager oldSoundManager = voiceClient.getSoundManager();
 
-                if (oldSoundManager.getMicrophone().getMicInfo() != null)
-                    micInfo = oldSoundManager.getMicrophone().getMicInfo();
+            if (oldSoundManager.getMicrophone().getMicInfo() != null)
+                micInfo = oldSoundManager.getMicrophone().getMicInfo();
 
-                if (oldSoundManager.getSpeaker().getSpkrInfo() != null)
-                    speakerInfo = oldSoundManager.getSpeaker().getSpkrInfo();
-            }
-
-            try {
-                voiceClient = new VoiceClient(this);
-
-                SoundManager newSoundManager = voiceClient.getSoundManager();
-
-                if (micInfo != null)
-                    newSoundManager.getMicrophone().reconnect(micInfo);
-
-                if (speakerInfo != null)
-                    newSoundManager.getSpeaker().reconnect(speakerInfo);
-
-                voiceClient.start();
-            } catch (SocketException e) {
-                e.printStackTrace();
-            }
+            if (oldSoundManager.getSpeaker().getSpkrInfo() != null)
+                speakerInfo = oldSoundManager.getSpeaker().getSpkrInfo();
         }
 
+        try {
+            voiceClient = new VoiceClient(this);
+
+            SoundManager newSoundManager = voiceClient.getSoundManager();
+
+            if (micInfo != null)
+                newSoundManager.getMicrophone().reconnect(micInfo);
+
+            if (speakerInfo != null)
+                newSoundManager.getSpeaker().reconnect(speakerInfo);
+
+            voiceClient.start();
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void stopVoiceClient() {
+        if (voiceClient != null && voiceClient.isRunning())
+            voiceClient.end();
+
+        PLAYER_INFO = null;
     }
 
     @Subscribe

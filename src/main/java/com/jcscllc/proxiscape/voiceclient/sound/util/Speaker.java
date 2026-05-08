@@ -152,6 +152,9 @@ public class Speaker extends Thread {
             while (running) {
                 Object[] soundPacket = locationalSoundPackets.take();
 
+                if (soundManager.getVoiceClient().getPlugin().getConfig().deafened())
+                    continue;
+
                 if (spkr == null ||
                         ((int) ProxiScapePlugin.PLAYER_INFO[5] != (int) soundPacket[5]) ||
                         ((int) ProxiScapePlugin.PLAYER_INFO[2] != (int) soundPacket[2]) ||
@@ -171,9 +174,6 @@ public class Speaker extends Thread {
                     pcmBytes[i * 2] = (byte) (pcmOut[i] & 0xff);
                     pcmBytes[i * 2 + 1] = (byte) ((pcmOut[i] >> 8) & 0xff);
                 }
-
-                if (soundManager.getVoiceClient().getPlugin().getConfig().deafened())
-                    continue;
 
                 int x1 = (int) ProxiScapePlugin.PLAYER_INFO[3];
                 int y1 = (int) ProxiScapePlugin.PLAYER_INFO[4];

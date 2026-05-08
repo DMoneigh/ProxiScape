@@ -62,6 +62,8 @@ public class Microphone extends Thread {
                 DataLine.Info info = new DataLine.Info(TargetDataLine.class, soundManager.getAudioFormat());
                 Mixer mixer = AudioSystem.getMixer(micInfo = mics.get(micNames.getSelectedItem().toString()));
 
+                storeMicrophone();
+
                 try {
                     mic = (TargetDataLine) mixer.getLine(info);
 
@@ -80,6 +82,10 @@ public class Microphone extends Thread {
         dialog.add(selectB, BorderLayout.SOUTH);
 
         dialog.setVisible(true);
+    }
+
+    private void storeMicrophone() {
+
     }
 
     private Map<String, Mixer.Info> getMicrophoneMap() {
@@ -141,6 +147,9 @@ public class Microphone extends Thread {
                 int read = mic.read(pcmBytes, 0, pcmBytes.length);
                 if (read != pcmBytes.length) continue;
 
+                if (soundManager.getVoiceClient().getPlugin().getConfig().muted())
+                    continue;
+
                 for (int i = 0; i < frameSize; i++) {
                     pcmShorts[i] = (short) (
                             (pcmBytes[i * 2] & 0xff) |
@@ -152,10 +161,6 @@ public class Microphone extends Thread {
 
                 if (ProxiScapePlugin.PLAYER_INFO != null) {
                     Object[] playerInfo = ProxiScapePlugin.PLAYER_INFO;
-
-
-                    if (soundManager.getVoiceClient().getPlugin().getConfig().muted())
-                        continue;
 
                     soundManager.getVoiceClient().getPacketManager().writeLocationalVoiceData("" + playerInfo[0], (int) playerInfo[2], (int) playerInfo[3], (int) playerInfo[4], (int) playerInfo[5], opusBuffer, encoded);
 //                   soundManager.getClient().getPacketManager().writeStaticVoiceData(opusBuffer, encoded);
