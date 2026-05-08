@@ -85,7 +85,7 @@ public class Microphone extends Thread {
     }
 
     private void storeMicrophone() {
-
+        //TODO store microphone information
     }
 
     private Map<String, Mixer.Info> getMicrophoneMap() {

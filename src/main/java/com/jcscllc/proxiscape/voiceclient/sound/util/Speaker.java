@@ -68,6 +68,8 @@ public class Speaker extends Thread {
                 DataLine.Info info = new DataLine.Info(SourceDataLine.class, soundManager.getAudioFormat());
                 Mixer mixer = AudioSystem.getMixer(spkrInfo = spkrs.get(spkrNames.getSelectedItem().toString()));
 
+                storeSpeaker();
+
                 try {
                     spkr = (SourceDataLine) mixer.getLine(info);
 
@@ -86,6 +88,10 @@ public class Speaker extends Thread {
         dialog.add(selectB, BorderLayout.SOUTH);
 
         dialog.setVisible(true);
+    }
+
+    private void storeSpeaker() {
+        //TODO Store speaker information
     }
 
     private Map<String, Mixer.Info> getSpeakerMap() {
@@ -122,7 +128,7 @@ public class Speaker extends Thread {
     }
 
     public void queueStaticSoundPacket(byte[] soundPacket) {
-        queueLocationalSoundPacket(soundPacket, "", -1, (Integer) ProxiScapePlugin.PLAYER_INFO[3], (int) ProxiScapePlugin.PLAYER_INFO[4], (int) ProxiScapePlugin.PLAYER_INFO[5]);
+        queueLocationalSoundPacket(soundPacket, (String) ProxiScapePlugin.PLAYER_INFO[1], (int) ProxiScapePlugin.PLAYER_INFO[2], (int) ProxiScapePlugin.PLAYER_INFO[3], (int) ProxiScapePlugin.PLAYER_INFO[4], (int) ProxiScapePlugin.PLAYER_INFO[5]);
     }
 
     public void queueLocationalSoundPacket(byte[] soundPacket, String name, int world, int x, int y, int plane) {

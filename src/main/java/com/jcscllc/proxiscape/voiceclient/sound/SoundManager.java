@@ -6,7 +6,7 @@ import com.jcscllc.proxiscape.voiceclient.sound.util.Speaker;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.*;
 
 public class SoundManager {
 
