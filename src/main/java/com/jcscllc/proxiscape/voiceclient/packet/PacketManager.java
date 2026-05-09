@@ -119,6 +119,7 @@ public class PacketManager {
         fbb.writeBytes(array, array.length); //Append data
 
         byte[] writable = fbb.toByteArray();
+
         voiceClient.getSocket().send(new DatagramPacket(writable, writable.length, to));
     }
 

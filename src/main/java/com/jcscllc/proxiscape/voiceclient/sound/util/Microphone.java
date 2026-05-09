@@ -1,6 +1,7 @@
 package com.jcscllc.proxiscape.voiceclient.sound.util;
 
 import com.jcscllc.proxiscape.ProxiScapePlugin;
+import com.jcscllc.proxiscape.file.FileManager;
 import com.jcscllc.proxiscape.voiceclient.sound.SoundManager;
 
 import lombok.Getter;
@@ -13,6 +14,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -85,7 +87,11 @@ public class Microphone extends Thread {
     }
 
     private void storeMicrophone() {
-        //TODO store microphone information
+        try {
+            FileManager.writeInfo("microphone", micInfo);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Map<String, Mixer.Info> getMicrophoneMap() {

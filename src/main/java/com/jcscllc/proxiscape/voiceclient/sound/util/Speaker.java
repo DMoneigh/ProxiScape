@@ -1,6 +1,7 @@
 package com.jcscllc.proxiscape.voiceclient.sound.util;
 
 import com.jcscllc.proxiscape.ProxiScapePlugin;
+import com.jcscllc.proxiscape.file.FileManager;
 import com.jcscllc.proxiscape.voiceclient.sound.SoundManager;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -91,7 +93,11 @@ public class Speaker extends Thread {
     }
 
     private void storeSpeaker() {
-        //TODO Store speaker information
+        try {
+            FileManager.writeInfo("speaker", spkrInfo);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Map<String, Mixer.Info> getSpeakerMap() {

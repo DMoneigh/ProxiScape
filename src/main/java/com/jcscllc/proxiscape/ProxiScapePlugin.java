@@ -2,6 +2,7 @@ package com.jcscllc.proxiscape;
 
 import com.google.inject.Provides;
 import com.jcscllc.proxiscape.config.ProxiScapeConfig;
+import com.jcscllc.proxiscape.file.FileManager;
 import com.jcscllc.proxiscape.overlay.ProxiScapeOverlay;
 import com.jcscllc.proxiscape.voiceclient.VoiceClient;
 import com.jcscllc.proxiscape.voiceclient.sound.SoundManager;
@@ -22,6 +23,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import javax.sound.sampled.Mixer;
+import java.io.FileNotFoundException;
 import java.net.SocketException;
 
 import static net.runelite.api.GameState.LOGGED_IN;
@@ -129,13 +131,20 @@ public class ProxiScapePlugin extends Plugin {
         Mixer.Info micInfo = null;
         Mixer.Info speakerInfo = null;
 
+        try {
+            micInfo = FileManager.readInfo("microphone", true);
+            speakerInfo = FileManager.readInfo("speaker", false);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         if (voiceClient != null) {
             SoundManager oldSoundManager = voiceClient.getSoundManager();
 
-            if (oldSoundManager.getMicrophone().getMicInfo() != null)
+            if (micInfo == null && oldSoundManager.getMicrophone().getMicInfo() != null)
                 micInfo = oldSoundManager.getMicrophone().getMicInfo();
 
-            if (oldSoundManager.getSpeaker().getSpkrInfo() != null)
+            if (speakerInfo == null && oldSoundManager.getSpeaker().getSpkrInfo() != null)
                 speakerInfo = oldSoundManager.getSpeaker().getSpkrInfo();
         }
 
