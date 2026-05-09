@@ -9,7 +9,7 @@ import java.net.SocketAddress;
 
 public class PacketManager {
 
-    private static final String VOICE_SERVER_IP = "18.212.139.228";
+    private static final String VOICE_SERVER_DOMAIN = "proxiscape.jcsc-llc.com";
 
     private static final int VOICE_SERVER_PORT = 4545;
 
@@ -44,7 +44,7 @@ public class PacketManager {
     public PacketManager(VoiceClient voiceClient) {
         this.voiceClient = voiceClient;
 
-        sock = new InetSocketAddress(VOICE_SERVER_IP, VOICE_SERVER_PORT);
+        sock = new InetSocketAddress(VOICE_SERVER_DOMAIN, VOICE_SERVER_PORT);
 
         running = true;
     }
