@@ -140,12 +140,14 @@ public class ProxiScapePlugin extends Plugin {
 
         if (voiceClient != null) {
             SoundManager oldSoundManager = voiceClient.getSoundManager();
+            Mixer.Info oldMicInfo = oldSoundManager.getMicrophone().getMicInfo();
+            Mixer.Info oldSpeakerInfo = oldSoundManager.getSpeaker().getSpkrInfo();
 
-            if (micInfo == null && oldSoundManager.getMicrophone().getMicInfo() != null)
-                micInfo = oldSoundManager.getMicrophone().getMicInfo();
+            if (micInfo == null && oldMicInfo != null)
+                micInfo = oldMicInfo;
 
-            if (speakerInfo == null && oldSoundManager.getSpeaker().getSpkrInfo() != null)
-                speakerInfo = oldSoundManager.getSpeaker().getSpkrInfo();
+            if (speakerInfo == null && oldSpeakerInfo != null)
+                speakerInfo = oldSpeakerInfo;
         }
 
         try {
