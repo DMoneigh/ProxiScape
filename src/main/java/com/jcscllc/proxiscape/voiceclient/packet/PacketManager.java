@@ -9,6 +9,8 @@ import java.net.SocketAddress;
 
 public class PacketManager {
 
+    private static final int MAXIMUM_PACKET_SIZE = 4000;
+
     private static final String VOICE_SERVER_DOMAIN = "proxiscape.jcsc-llc.com";
 
     private static final int VOICE_SERVER_PORT = 4545;
@@ -109,7 +111,7 @@ public class PacketManager {
     }
 
     public void write(byte type, SocketAddress to, FriendlyByteBuf data) throws Exception {
-        FriendlyByteBuf fbb = new FriendlyByteBuf(5000);
+        FriendlyByteBuf fbb = new FriendlyByteBuf(MAXIMUM_PACKET_SIZE);
         fbb.writeByte(MAGIC_BYTE); //Write magic byte
         fbb.writeLong(System.currentTimeMillis()); //Write timestamp
         fbb.writeByte(type); //Write type
@@ -124,7 +126,7 @@ public class PacketManager {
     }
 
     public void writeAuthenticatePacket(String hash, String username) throws Exception {
-        FriendlyByteBuf buf = new FriendlyByteBuf(5000);
+        FriendlyByteBuf buf = new FriendlyByteBuf(MAXIMUM_PACKET_SIZE);
         buf.writeUtf(hash);
         buf.writeUtf(username);
 
@@ -132,21 +134,21 @@ public class PacketManager {
     }
 
     public void writeKeepAlivePacket(String hash) throws Exception {
-        FriendlyByteBuf buf = new FriendlyByteBuf(5000);
+        FriendlyByteBuf buf = new FriendlyByteBuf(MAXIMUM_PACKET_SIZE);
         buf.writeUtf(hash);
 
         write(KEEP_ALIVE_PACKET, sock, buf);
     }
 
     public void writePingPacket(String hash) throws Exception {
-        FriendlyByteBuf buf = new FriendlyByteBuf(5000);
+        FriendlyByteBuf buf = new FriendlyByteBuf(MAXIMUM_PACKET_SIZE);
         buf.writeUtf(hash);
 
         write(PING_PACKET, sock, buf);
     }
 
     public void writeUpdatePositionPacket(String hash, int world, int x, int y) throws Exception {
-        FriendlyByteBuf buf = new FriendlyByteBuf(5000);
+        FriendlyByteBuf buf = new FriendlyByteBuf(MAXIMUM_PACKET_SIZE);
         buf.writeUtf(hash);
         buf.writeInt(world);
         buf.writeInt(x);
@@ -156,7 +158,7 @@ public class PacketManager {
     }
 
     public void writeLocationalVoiceData(String hash, int world, int x, int y, int plane, byte[] voiceData, int length) throws Exception {
-        FriendlyByteBuf buf = new FriendlyByteBuf(5000);
+        FriendlyByteBuf buf = new FriendlyByteBuf(MAXIMUM_PACKET_SIZE);
         buf.writeUtf(hash);
         buf.writeInt(world);
         buf.writeInt(x);
