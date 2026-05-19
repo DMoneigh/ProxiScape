@@ -4,10 +4,10 @@ import com.jcscllc.proxiscape.ProxiScapePlugin;
 import com.jcscllc.proxiscape.file.FileManager;
 import com.jcscllc.proxiscape.voiceclient.sound.SoundManager;
 
+import io.github.jaredmdobson.concentus.OpusApplication;
+import io.github.jaredmdobson.concentus.OpusEncoder;
 import lombok.Getter;
 import lombok.Setter;
-import org.concentus.OpusApplication;
-import org.concentus.OpusEncoder;
 
 import javax.sound.sampled.*;
 import javax.swing.*;
