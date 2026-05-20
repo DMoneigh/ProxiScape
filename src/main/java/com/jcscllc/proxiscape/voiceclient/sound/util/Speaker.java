@@ -156,8 +156,6 @@ public class Speaker extends Thread {
             spkr.start();
 
             int frameSize = 960;
-            short[] pcmOut = new short[frameSize];
-            byte[] pcmBytes = new byte[frameSize * 2];
 
             OpusDecoder decoder = new OpusDecoder(16000, 1);
 
@@ -183,11 +181,15 @@ public class Speaker extends Thread {
 
                 byte[] opusData = (byte[]) soundPacket[0];
 
+                short[] pcmOut = new short[frameSize];
+
                 int decoded = decoder.decode(
                         opusData, 0, opusData.length,
                         pcmOut, 0, frameSize,
                         false
                 );
+
+                byte[] pcmBytes = new byte[frameSize * 2];
 
                 // shorts -> bytes
                 for (int i = 0; i < decoded; i++) {
