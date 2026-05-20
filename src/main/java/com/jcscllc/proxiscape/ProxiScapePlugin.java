@@ -35,6 +35,8 @@ import static net.runelite.api.GameState.LOGIN_SCREEN;
 )
 public class ProxiScapePlugin extends Plugin {
 
+    private static final int PUBLIC_CHAT_FILTER_ID = 10616846;
+
     public static Object[] PLAYER_INFO;
 
     @Inject
@@ -228,11 +230,44 @@ public class ProxiScapePlugin extends Plugin {
         if (ignores == null)
             return false;
 
+        if (name.equals(client.getLocalPlayer().getName()))
+            return true;
+
         for (Nameable ignored : ignores.getMembers())
             if (ignored.getName().equalsIgnoreCase(name))
                 return true;
 
         return false;
+    }
+
+    public boolean isPlayerFriend(String name) {
+        NameableContainer<Friend> friends = client.getFriendContainer();
+
+        if (friends == null)
+            return false;
+
+        if (name.equals(client.getLocalPlayer().getName()))
+            return true;
+
+        for (Nameable friend : friends.getMembers())
+            if (friend.getName().equalsIgnoreCase(name))
+                return true;
+
+        return false;
+    }
+
+    public boolean isPublicChatFriendsOnly() {
+        if (client.getLocalPlayer() == null)
+            return false;
+
+        return client.getWidget(PUBLIC_CHAT_FILTER_ID).getText().contains("Friends");
+    }
+
+    public boolean isPublicChatOff() {
+        if (client.getLocalPlayer() == null)
+            return false;
+
+        return client.getWidget(PUBLIC_CHAT_FILTER_ID).getText().contains("Off");
     }
 
 }

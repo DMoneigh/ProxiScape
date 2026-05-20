@@ -161,16 +161,24 @@ public class Speaker extends Thread {
 
             OpusDecoder decoder = new OpusDecoder(16000, 1);
 
+            ProxiScapePlugin plugin = soundManager.getVoiceClient().getPlugin();
+
             while (running) {
                 Object[] soundPacket = locationalSoundPackets.take();
 
-                if (soundManager.getVoiceClient().getPlugin().getConfig().deafened())
+                if (plugin.getConfig().deafened())
                     continue;
 
                 if (spkr == null ||
-                        ((int) ProxiScapePlugin.PLAYER_INFO[5] != (int) soundPacket[5]) ||
                         ((int) ProxiScapePlugin.PLAYER_INFO[2] != (int) soundPacket[2]) ||
-                        soundManager.getVoiceClient().getPlugin().isPlayerIgnored((String) soundPacket[1]))
+                        ((int) ProxiScapePlugin.PLAYER_INFO[5] != (int) soundPacket[5]) ||
+                        plugin.isPlayerIgnored((String) soundPacket[1]))
+                    continue;
+
+                if (plugin.isPublicChatFriendsOnly() && !plugin.isPlayerFriend((String) soundPacket[1]))
+                    continue;
+
+                if (plugin.isPublicChatOff())
                     continue;
 
                 byte[] opusData = (byte[]) soundPacket[0];
