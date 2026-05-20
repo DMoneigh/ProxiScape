@@ -1,16 +1,23 @@
 package com.jcscllc.proxiscape.file;
 
+import net.runelite.client.RuneLite;
+
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.Line;
 import javax.sound.sampled.Mixer;
 import java.io.*;
+import java.nio.file.Files;
 import java.util.Scanner;
 
 public class FileManager {
 
     public static void writeInfo(String fileName, Mixer.Info info) throws IOException {
-        File file = new File(fileName);
+        File dir = new File(RuneLite.RUNELITE_DIR + "/proximity-chat/");
+
+        dir.mkdirs();
+
+        File file = new File(dir.getPath() + "/" + fileName);
 
         file.createNewFile();
 
@@ -25,7 +32,7 @@ public class FileManager {
     }
 
     public static Mixer.Info readInfo(String fileName, boolean isMic) throws FileNotFoundException {
-        File file = new File(fileName);
+        File file = new File(RuneLite.RUNELITE_DIR + "/proximity-chat/" + fileName);
 
         if (!file.exists())
             return null;
