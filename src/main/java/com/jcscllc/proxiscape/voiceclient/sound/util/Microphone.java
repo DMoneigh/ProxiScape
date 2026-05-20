@@ -20,6 +20,12 @@ import java.util.Map;
 
 public class Microphone extends Thread {
 
+    private final double silenceDb = -45;
+
+    private int silenceFrames = 0;
+
+    private boolean transmitting = false;
+
     private final SoundManager soundManager;
 
     @Setter
@@ -34,6 +40,7 @@ public class Microphone extends Thread {
 
     @Getter
     private boolean muted;
+
 
     public Microphone(SoundManager soundManager) {
         this.soundManager = soundManager;
@@ -148,9 +155,12 @@ public class Microphone extends Thread {
 
             OpusEncoder encoder = new OpusEncoder(16000, 1, OpusApplication.OPUS_APPLICATION_VOIP);
 
+            encoder.setUseDTX(true);
+
             while (running) {
 
                 int read = mic.read(pcmBytes, 0, pcmBytes.length);
+
                 if (read != pcmBytes.length) continue;
 
                 if (soundManager.getVoiceClient().getPlugin().getConfig().muted())
@@ -162,6 +172,21 @@ public class Microphone extends Thread {
                                     (pcmBytes[i * 2 + 1] << 8)
                     );
                 }
+
+                boolean speech = isSpeech(pcmShorts);
+
+                if (speech) {
+                    silenceFrames = 0;
+                    transmitting = true;
+                } else {
+                    silenceFrames++;
+
+                    if (silenceFrames > 10)
+                        transmitting = false;
+                }
+
+                if (!transmitting)
+                    continue;
 
                 int encoded = encoder.encode(pcmShorts, 0, frameSize, opusBuffer, 0, opusBuffer.length);
 
@@ -175,6 +200,22 @@ public class Microphone extends Thread {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean isSpeech(short[] samples) {
+        long sum = 0;
+
+        for (short s : samples)
+            sum += (long)s * s;
+
+        double rms = Math.sqrt(sum / (double)samples.length);
+
+        if (rms < 1)
+            return false;
+
+        double db = 20 * Math.log10(rms / 32768.0);
+
+        return db > silenceDb;
     }
 
 }

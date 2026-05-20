@@ -12,12 +12,14 @@ import java.util.Scanner;
 
 public class FileManager {
 
+    private static final String PLUGIN_PATH = RuneLite.RUNELITE_DIR + "/proximity-chat/";
+
     public static void writeInfo(String fileName, Mixer.Info info) throws IOException {
-        File dir = new File(RuneLite.RUNELITE_DIR + "/proximity-chat/");
+        File dir = new File(PLUGIN_PATH);
 
         dir.mkdirs();
 
-        File file = new File(dir.getPath() + "/" + fileName);
+        File file = new File(PLUGIN_PATH + fileName);
 
         file.createNewFile();
 
@@ -32,7 +34,7 @@ public class FileManager {
     }
 
     public static Mixer.Info readInfo(String fileName, boolean isMic) throws FileNotFoundException {
-        File file = new File(RuneLite.RUNELITE_DIR + "/proximity-chat/" + fileName);
+        File file = new File(PLUGIN_PATH + fileName);
 
         if (!file.exists())
             return null;
