@@ -196,6 +196,11 @@ public class ProxiScapePlugin extends Plugin {
         if ((key.equals("microphone") || key.equals("speaker") || key.equals("audio")) && event.getOldValue().equals("true"))
             return;
 
+        if (key.equals("audio")) {
+            new AudioTestUI().startUI();
+            return;
+        }
+
         String newValue = event.getNewValue();
 
         if (voiceClient == null || !voiceClient.isRunning())
@@ -224,10 +229,6 @@ public class ProxiScapePlugin extends Plugin {
                 }
 
                 manager.getSpeaker().chooseSpeaker();
-                break;
-
-            case "audio" :
-                new AudioTestUI().startUI();
                 break;
 
             default:

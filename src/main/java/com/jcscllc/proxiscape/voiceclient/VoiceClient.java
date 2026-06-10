@@ -62,7 +62,6 @@ public class VoiceClient extends Thread {
 
     @Override
     public void run() {
-
         while (running) {
             byte[] buffer = new byte[PACKET_BUFFER_SIZE];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -106,7 +105,6 @@ public class VoiceClient extends Thread {
 
         @Override
         public void run() {
-
             while (running) {
                 try {
                     DatagramPacket packet = packetQueue.poll(10, TimeUnit.MILLISECONDS);
