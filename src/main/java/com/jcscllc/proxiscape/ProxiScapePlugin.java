@@ -26,8 +26,7 @@ import javax.sound.sampled.Mixer;
 import java.io.FileNotFoundException;
 import java.net.SocketException;
 
-import static net.runelite.api.GameState.LOGGED_IN;
-import static net.runelite.api.GameState.LOGIN_SCREEN;
+import static net.runelite.api.GameState.*;
 
 @Slf4j
 @PluginDescriptor(
@@ -139,6 +138,8 @@ public class ProxiScapePlugin extends Plugin {
             stopVoiceClient();
         else if (gameStateChanged.getGameState() == LOGGED_IN)
             startVoiceClient();
+        else if (gameStateChanged.getGameState() == HOPPING)
+            stopVoiceClient();
     }
 
     private void startVoiceClient() {
