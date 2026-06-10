@@ -3,6 +3,7 @@
 THE DEDICATED proximity voice chat plugin. (BETA)
 
 # Simple User Interface
+- Test, connect, speak
 <img width="1889" height="1015" alt="proxiscapebeta" src="https://github.com/user-attachments/assets/fa868e89-3458-4b2f-b6ea-1d933e7a3717" />
 - Set your microphone
 - Set your speakers
