@@ -26,4 +26,5 @@ THE DEDICATED proximity voice chat plugin. (BETA)
 <img width="1484" height="690" alt="audioplaybacktest" src="https://github.com/user-attachments/assets/f512473e-713c-479e-bdbe-8e416462cffb" />
 
 # User Interface Screenshot
-<img width="1894" height="1019" alt="proxiscapeAlPHA" src="https://github.com/user-attachments/assets/b30160de-0890-46cc-bd3b-557f41fa8020" />
+<img width="1889" height="1015" alt="proxiscapebeta" src="https://github.com/user-attachments/assets/fa868e89-3458-4b2f-b6ea-1d933e7a3717" />
+
