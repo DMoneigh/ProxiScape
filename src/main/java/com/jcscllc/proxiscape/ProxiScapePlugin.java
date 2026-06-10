@@ -6,6 +6,7 @@ import com.jcscllc.proxiscape.file.FileManager;
 import com.jcscllc.proxiscape.overlay.ProxiScapeOverlay;
 import com.jcscllc.proxiscape.voiceclient.VoiceClient;
 import com.jcscllc.proxiscape.voiceclient.sound.SoundManager;
+import com.jcscllc.proxiscape.voiceclient.sound.ui.AudioTestUI;
 import com.jcscllc.proxiscape.voiceclient.sound.util.Microphone;
 import com.jcscllc.proxiscape.voiceclient.sound.util.Speaker;
 import lombok.Getter;
@@ -192,7 +193,7 @@ public class ProxiScapePlugin extends Plugin {
 
         String key = event.getKey();
 
-        if ((key.equals("microphone") || key.equals("speaker")) && event.getOldValue().equals("true"))
+        if ((key.equals("microphone") || key.equals("speaker") || key.equals("audio")) && event.getOldValue().equals("true"))
             return;
 
         String newValue = event.getNewValue();
@@ -205,7 +206,7 @@ public class ProxiScapePlugin extends Plugin {
         Speaker speaker = manager.getSpeaker();
 
         switch (key) {
-            case "microphone":
+            case "microphone" :
                 if (microphone.isRunning()) {
                     microphone.end();
 
@@ -215,7 +216,7 @@ public class ProxiScapePlugin extends Plugin {
                 manager.getMicrophone().chooseMicrophone();
                 break;
 
-            case "speaker":
+            case "speaker" :
                 if (speaker.isRunning()) {
                     speaker.end();
 
@@ -223,6 +224,10 @@ public class ProxiScapePlugin extends Plugin {
                 }
 
                 manager.getSpeaker().chooseSpeaker();
+                break;
+
+            case "audio" :
+                new AudioTestUI().startUI();
                 break;
 
             default:

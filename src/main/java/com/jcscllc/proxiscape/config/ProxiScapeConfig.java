@@ -22,6 +22,13 @@ public interface ProxiScapeConfig extends Config {
     )
     String voiceControl = "voiceControl";
 
+    @ConfigSection(
+            name = "Audio Test",
+            description = "Test audio before voice setup",
+            position = 3
+    )
+    String audioTest = "audioTest";
+
     @ConfigItem(
             keyName = "microphone",
             name = "Set Microphone",
@@ -63,5 +70,13 @@ public interface ProxiScapeConfig extends Config {
     default boolean deafened() {
         return false;
     }
+
+    @ConfigItem(
+            keyName = "audio",
+            name = "Audio Test",
+            description = "Click this to test audio",
+            section = audioTest
+    )
+    default boolean audio() { return false; }
 
 }
