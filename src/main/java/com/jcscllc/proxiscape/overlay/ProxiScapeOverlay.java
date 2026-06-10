@@ -38,7 +38,6 @@ public class ProxiScapeOverlay extends Overlay {
 
     @Override
     public Dimension render(Graphics2D graphics) {
-
         for (Player player : client.getPlayers()) {
             if (player == null || player == client.getLocalPlayer())
                 continue;

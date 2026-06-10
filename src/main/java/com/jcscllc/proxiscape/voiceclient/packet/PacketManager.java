@@ -86,7 +86,6 @@ public class PacketManager {
     }
 
     public void read(SocketAddress from, FriendlyByteBuf fbb) throws Exception {
-
         if (fbb.readByte() != MAGIC_BYTE) //Read magic byte
             return;
 

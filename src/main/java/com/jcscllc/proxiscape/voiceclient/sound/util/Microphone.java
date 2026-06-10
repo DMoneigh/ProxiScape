@@ -38,10 +38,6 @@ public class Microphone extends Thread {
     @Getter
     private boolean running;
 
-    @Getter
-    private boolean muted;
-
-
     public Microphone(SoundManager soundManager) {
         this.soundManager = soundManager;
 
@@ -67,7 +63,6 @@ public class Microphone extends Thread {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-
                 DataLine.Info info = new DataLine.Info(TargetDataLine.class, soundManager.getAudioFormat());
                 Mixer mixer = AudioSystem.getMixer(micInfo = mics.get(micNames.getSelectedItem().toString()));
 

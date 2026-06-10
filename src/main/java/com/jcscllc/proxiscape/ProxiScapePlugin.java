@@ -64,7 +64,6 @@ public class ProxiScapePlugin extends Plugin {
 
     @Override
     protected void startUp() {
-
         if (client.getLocalPlayer() != null)
             startVoiceClient();
 
@@ -74,7 +73,6 @@ public class ProxiScapePlugin extends Plugin {
 
     @Override
     protected void shutDown() {
-
         stopVoiceClient();
 
         overlayManager.remove(overlay);
@@ -82,7 +80,6 @@ public class ProxiScapePlugin extends Plugin {
 
     @Subscribe
     public void onGameTick(GameTick event) {
-
         Player player = client.getLocalPlayer();
 
         if (player == null)
@@ -133,7 +130,6 @@ public class ProxiScapePlugin extends Plugin {
 
     @Subscribe
     public void onGameStateChanged(GameStateChanged gameStateChanged) {
-
         if (gameStateChanged.getGameState() == LOGIN_SCREEN)
             stopVoiceClient();
         else if (gameStateChanged.getGameState() == LOGGED_IN)
@@ -191,7 +187,6 @@ public class ProxiScapePlugin extends Plugin {
 
     @Subscribe
     public void onConfigChanged(ConfigChanged event) {
-
         if (!event.getGroup().equals("proxiscape"))
             return;
 
@@ -237,7 +232,6 @@ public class ProxiScapePlugin extends Plugin {
     }
 
     public boolean isPlayerIgnored(String name) {
-
         NameableContainer<Ignore> ignores = client.getIgnoreContainer();
 
         if (ignores == null)

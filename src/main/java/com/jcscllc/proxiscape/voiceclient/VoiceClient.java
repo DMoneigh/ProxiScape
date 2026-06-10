@@ -96,7 +96,6 @@ public class VoiceClient extends Thread {
     }
 
     private class PacketProcessor extends Thread {
-
         private boolean running;
 
         public PacketProcessor() {
@@ -135,7 +134,6 @@ public class VoiceClient extends Thread {
 
         @Override
         public void run() {
-
             while (running) {
                 try {
                     Thread.sleep(3000);

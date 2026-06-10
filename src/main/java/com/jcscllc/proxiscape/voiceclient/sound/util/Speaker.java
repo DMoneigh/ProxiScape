@@ -14,10 +14,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class Speaker extends Thread {
 
@@ -34,9 +36,6 @@ public class Speaker extends Thread {
 
     @Getter
     private boolean running;
-
-    @Getter
-    private boolean deafened;
 
     public Speaker(SoundManager soundManager) {
         this.soundManager = soundManager;
@@ -162,7 +161,13 @@ public class Speaker extends Thread {
             ProxiScapePlugin plugin = soundManager.getVoiceClient().getPlugin();
 
             while (running) {
-                Object[] soundPacket = locationalSoundPackets.take();
+                Object[] soundPacket = locationalSoundPackets.poll(150, TimeUnit.MILLISECONDS);
+
+                if (soundPacket == null) {
+                    spkr.flush();
+                    decoder.resetState();
+                    continue;
+                }
 
                 if (plugin.getConfig().deafened())
                     continue;
