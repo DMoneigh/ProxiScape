@@ -11,15 +11,13 @@ public class PacketManager {
 
     private static final int MAXIMUM_PACKET_SIZE = 4000;
 
-    private static final String VOICE_SERVER_DOMAIN_US = "proxiscape.jcsc-llc.com";
+    private static final String VOICE_SERVER_DOMAIN_USE = "proxiscape-use.jcsc-llc.com";
 
-    private static final String VOICE_SERVER_DOMAIN_BR = "";
+    private static final String VOICE_SERVER_DOMAIN_UK = "proxiscape-uk.jcsc-llc.com";
 
-    private static final String VOICE_SERVER_DOMAIN_UK = "";
+    private static final String VOICE_SERVER_DOMAIN_DE = "proxiscape-de.jcsc-llc.com";
 
-    private static final String VOICE_SERVER_DOMAIN_DE = "";
-
-    private static final String VOICE_SERVER_DOMAIN_AUS = "";
+    private static final String VOICE_SERVER_DOMAIN_AUS = "proxiscape-aus.jcsc-llc.com";
 
     private static final int VOICE_SERVER_PORT = 4545;
 
@@ -47,18 +45,40 @@ public class PacketManager {
 
     private final VoiceClient voiceClient;
 
-    private final InetSocketAddress sock;
+    private InetSocketAddress sock;
 
     private boolean running;
 
     public PacketManager(VoiceClient voiceClient) {
         this.voiceClient = voiceClient;
 
-        //TODO Implement code to handle what voice server to connect to by world
-
-        sock = new InetSocketAddress(VOICE_SERVER_DOMAIN_US, VOICE_SERVER_PORT);
-
         running = true;
+    }
+
+    public void createVoiceSocket(int worldType) {
+        String voiceServer = VOICE_SERVER_DOMAIN_USE;
+
+        switch (worldType) {
+            case 1 :
+                voiceServer = VOICE_SERVER_DOMAIN_UK;
+                break;
+
+            case 3 :
+            case 10 :
+            case 12 :
+                voiceServer = VOICE_SERVER_DOMAIN_AUS;
+                break;
+
+            case 7 :
+                voiceServer = VOICE_SERVER_DOMAIN_DE;
+                break;
+
+            default :
+                voiceServer = VOICE_SERVER_DOMAIN_USE;
+                break;
+        }
+
+        sock = new InetSocketAddress(voiceServer, VOICE_SERVER_PORT);
     }
 
     public void end() {

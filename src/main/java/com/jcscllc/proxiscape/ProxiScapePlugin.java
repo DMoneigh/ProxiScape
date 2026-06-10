@@ -89,6 +89,8 @@ public class ProxiScapePlugin extends Plugin {
         if (player == null)
             return;
 
+        int world = client.getWorld();
+
         WorldPoint wp = player.getWorldLocation();
 
         int x = wp.getX();
@@ -96,6 +98,8 @@ public class ProxiScapePlugin extends Plugin {
 
         if (PLAYER_INFO == null) {
             try {
+                voiceClient.getPacketManager().createVoiceSocket(getWorldType(world));
+
                 voiceClient.getPacketManager().writeAuthenticatePacket(client.getAccountHash() + "", player.getName());
 
                 voiceClient.getKeepAlive().start();
@@ -107,17 +111,25 @@ public class ProxiScapePlugin extends Plugin {
         PLAYER_INFO = new Object[]{
                 client.getAccountHash(),
                 player.getName(),
-                client.getWorld(),
+                world,
                 x,
                 y,
                 wp.getPlane()
         };
 
         try {
-            voiceClient.getPacketManager().writeUpdatePositionPacket(client.getAccountHash() + "", client.getWorld(), x, y);
+            voiceClient.getPacketManager().writeUpdatePositionPacket(client.getAccountHash() + "", world, x, y);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private int getWorldType(int worldNumber) {
+        for (World world : client.getWorldList())
+            if (world.getId() == worldNumber)
+                return world.getLocation();
+
+        return 0;
     }
 
     @Subscribe
