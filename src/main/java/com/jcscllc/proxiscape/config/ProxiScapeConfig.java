@@ -23,7 +23,7 @@ public interface ProxiScapeConfig extends Config {
     String voiceControl = "voiceControl";
 
     @ConfigSection(
-            name = "Audio Test",
+            name = "Audio Playback Test",
             description = "Test audio before voice setup",
             position = 3
     )
@@ -73,8 +73,8 @@ public interface ProxiScapeConfig extends Config {
 
     @ConfigItem(
             keyName = "audio",
-            name = "Audio Test",
-            description = "Click this to test audio",
+            name = "Audio Playback Test",
+            description = "Click this to conduct an audio playback test",
             section = audioTest
     )
     default boolean audio() { return false; }
