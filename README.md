@@ -25,5 +25,5 @@ THE DEDICATED proximity voice chat plugin. (BETA)
 - Incoming/Outgoing graphs will match if audio settings are correct
 <img width="1484" height="690" alt="audioplaybacktest" src="https://github.com/user-attachments/assets/f512473e-713c-479e-bdbe-8e416462cffb" />
 
-# Example Screenshot
+# User Interface Screenshot
 <img width="1894" height="1019" alt="proxiscapeAlPHA" src="https://github.com/user-attachments/assets/b30160de-0890-46cc-bd3b-557f41fa8020" />
