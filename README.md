@@ -22,7 +22,8 @@ THE DEDICATED proximity voice chat plugin. (BETA)
 - Users are automatically connected to the server near the ladder world region.
 
 # Simple Audio Playback Testing
-- Incoming/Outgoing graphs will match if audio settings are correct
+- Try different speakers and microphones until you can hear your audio playback.
+- If done correctly, you should be able to hear your audio playback and the graphs should be equal as shown below.
 <img width="1484" height="690" alt="audioplaybacktest" src="https://github.com/user-attachments/assets/f512473e-713c-479e-bdbe-8e416462cffb" />
 
 # User Interface Screenshot
