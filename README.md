@@ -14,8 +14,8 @@ THE DEDICATED proximity voice chat plugin. (BETA)
 # Simple Audio Playback Testing
 - Try different microphones and speakers until you can hear your audio playback.
 - If done correctly, graphs should coincident as shown below.
-- <img width="1484" height="690" alt="audioplaybacktest" src="https://github.com/user-attachments/assets/f512473e-713c-479e-bdbe-8e416462cffb" />
-- Be sure to set the microphones and speakers in the "Voice Setup" section of the UI to what you tested in the "Audio Playback Test" section.
+- <img width="1486" height="693" alt="audioplaybacktest2" src="https://github.com/user-attachments/assets/a1026668-c751-4c0d-8074-17aa5df00151" />
+- Simply press "Accept" to store and use these microphone and speaker values
 
 # Simplified Chat
 - Green circle means that a user is speaking
