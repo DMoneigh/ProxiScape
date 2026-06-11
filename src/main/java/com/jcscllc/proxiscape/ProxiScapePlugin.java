@@ -56,6 +56,7 @@ public class ProxiScapePlugin extends Plugin {
     @Inject
     private ProxiScapeOverlay overlay;
 
+    @Getter
     private VoiceClient voiceClient;
 
     @Provides
@@ -197,7 +198,7 @@ public class ProxiScapePlugin extends Plugin {
             return;
 
         if (key.equals("audio")) {
-            new AudioTestUI().startUI();
+            new AudioTestUI(this).startUI();
             return;
         }
 

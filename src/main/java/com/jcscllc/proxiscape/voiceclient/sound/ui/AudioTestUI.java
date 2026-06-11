@@ -3,19 +3,33 @@ package com.jcscllc.proxiscape.voiceclient.sound.ui;
 import javax.sound.sampled.*;
 import javax.swing.*;
 
+import com.jcscllc.proxiscape.ProxiScapePlugin;
+import com.jcscllc.proxiscape.file.FileManager;
+import com.jcscllc.proxiscape.voiceclient.VoiceClient;
+import com.jcscllc.proxiscape.voiceclient.sound.SoundManager;
+import com.jcscllc.proxiscape.voiceclient.sound.util.Microphone;
+import com.jcscllc.proxiscape.voiceclient.sound.util.Speaker;
 import io.github.jaredmdobson.concentus.OpusApplication;
 import io.github.jaredmdobson.concentus.OpusDecoder;
 import io.github.jaredmdobson.concentus.OpusEncoder;
 
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AudioTestUI {
+
+    private ProxiScapePlugin plugin;
+
+    public AudioTestUI(ProxiScapePlugin plugin) {
+        this.plugin = plugin;
+    }
 
     class AudioGraphPanel extends JPanel {
 
@@ -83,7 +97,13 @@ public class AudioTestUI {
     private AudioGraphPanel outgoingGraph;
     private AudioGraphPanel incomingGraph;
 
+    private VoiceClient client;
+
     public void startUI() {
+       client = plugin.getVoiceClient();
+
+        if (ProxiScapePlugin.PLAYER_INFO != null)
+            client.getSoundManager().end();
 
         outgoingGraph = new AudioGraphPanel();
         incomingGraph = new AudioGraphPanel();
@@ -107,6 +127,7 @@ public class AudioTestUI {
 
         JButton startBtn = new JButton("Start");
         JButton stopBtn = new JButton("Stop");
+        JButton accept = new JButton("Accept");
 
         // Populate devices
         List<Mixer.Info> inputs = getDevices(TargetDataLine.class);
@@ -128,6 +149,8 @@ public class AudioTestUI {
         stopBtn.setEnabled(false);
 
         controls.add(stopBtn);
+
+        controls.add(accept);
 
         JPanel graphPanel = new JPanel();
         graphPanel.setLayout(new GridLayout(2, 1));
@@ -195,7 +218,41 @@ public class AudioTestUI {
 
         });
 
+        accept.addActionListener(e -> {
+            stopVoip();
+
+            Mixer.Info micInfo = (Mixer.Info) micDropdown.getSelectedItem();
+            Mixer.Info speakerInfo = (Mixer.Info) speakerDropdown.getSelectedItem();
+
+            if (ProxiScapePlugin.PLAYER_INFO != null) {
+                SoundManager soundManager = client.getSoundManager();
+
+                Microphone microphone = new Microphone(soundManager);
+                Speaker speaker = new Speaker(soundManager);
+
+                soundManager.setMicrophone(microphone);
+                soundManager.setSpeaker(speaker);
+
+                microphone.reconnect(micInfo);
+                speaker.reconnect(speakerInfo);
+
+                saveInfo(micInfo, speakerInfo);
+            } else
+                saveInfo(micInfo, speakerInfo);
+
+            frame.dispose();
+        });
+
         frame.setVisible(true);
+    }
+
+    void saveInfo(Mixer.Info mic, Mixer.Info spkr) {
+        try {
+            FileManager.writeInfo("microphone", mic);
+            FileManager.writeInfo("speaker", spkr);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // ===== START VOIP =====
