@@ -245,7 +245,7 @@ public class ProxiScapePlugin extends Plugin {
             return false;
 
         if (name.equals(client.getLocalPlayer().getName()))
-            return true;
+            return false;
 
         for (Nameable ignored : ignores.getMembers())
             if (ignored.getName().equalsIgnoreCase(name))
