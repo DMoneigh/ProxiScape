@@ -13,7 +13,7 @@ THE DEDICATED proximity voice chat plugin. (BETA)
 
 # Simple Audio Playback Testing
 - Try different microphones and speakers until you can hear your audio playback.
-- If done correctly, graphs should coincident as shown below.
+- If done correctly, graphs should be coincident as shown below.
 - <img width="1486" height="693" alt="audioplaybacktest2" src="https://github.com/user-attachments/assets/a1026668-c751-4c0d-8074-17aa5df00151" />
 - Simply press "Accept" to store and use these microphone and speaker values
 
