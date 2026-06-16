@@ -176,7 +176,18 @@ public class PacketManager {
         write(PING_PACKET, sock, buf);
     }
 
+    int lastWorld = -1;
+    int lastX = -1;
+    int lastY = -1;
+
     public void writeUpdatePositionPacket(String hash, int world, int x, int y) throws Exception {
+        if (lastWorld == world && lastX == x && lastY == y)
+            return;
+
+        lastWorld = world;
+        lastX = x;
+        lastY = y;
+
         FriendlyByteBuf buf = new FriendlyByteBuf(MAXIMUM_PACKET_SIZE);
         buf.writeUtf(hash);
         buf.writeInt(world);

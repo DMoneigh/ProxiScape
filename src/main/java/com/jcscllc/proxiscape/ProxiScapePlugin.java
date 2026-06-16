@@ -106,7 +106,7 @@ public class ProxiScapePlugin extends Plugin {
             }
         }
 
-        PLAYER_INFO = new Object[]{
+        PLAYER_INFO = new Object[] {
                 client.getAccountHash(),
                 player.getName(),
                 world,
