@@ -18,14 +18,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class Speaker extends Thread {
 
     private final SoundManager soundManager;
-
-    private final BlockingQueue<Object[]> locationalSoundPackets;
 
     @Setter
     @Getter
@@ -39,8 +38,6 @@ public class Speaker extends Thread {
 
     public Speaker(SoundManager soundManager) {
         this.soundManager = soundManager;
-
-        locationalSoundPackets = new LinkedBlockingQueue<Object[]>();
 
         setDaemon(true);
 
@@ -132,20 +129,87 @@ public class Speaker extends Thread {
         }
     }
 
-    public void queueStaticSoundPacket(byte[] soundPacket) {
-        queueLocationalSoundPacket(soundPacket, (String) ProxiScapePlugin.PLAYER_INFO[1], (int) ProxiScapePlugin.PLAYER_INFO[2], (int) ProxiScapePlugin.PLAYER_INFO[3], (int) ProxiScapePlugin.PLAYER_INFO[4], (int) ProxiScapePlugin.PLAYER_INFO[5]);
-    }
-
-    public void queueLocationalSoundPacket(byte[] soundPacket, String name, int world, int x, int y, int plane) {
-        if (spkr != null)
-            locationalSoundPackets.add(new Object[]{soundPacket, name, world, x, y, plane});
-    }
-
     public void end() {
         running = false;
 
         if (spkr != null)
             spkr.close();
+    }
+
+    private Map<String, JitterBuffer> jitterBufferMap = new ConcurrentHashMap<String, JitterBuffer>();
+    private Map<String, OpusDecoder> decoders = new ConcurrentHashMap<String, OpusDecoder>();
+
+    private class JitterBuffer {
+        private final Map<Integer, Object[]> buffer = new ConcurrentHashMap<Integer, Object[]>();
+
+        private int expectedSeq = -1;
+        private long lastPacketTime;
+
+        // 40ms = good default for internet VoIP
+        private static final long JITTER_DELAY_MS = 40;
+
+        public void add(int sequence, Object[] p)
+        {
+            if (sequence < expectedSeq)
+                return; // too late, drop
+
+            buffer.put(sequence, p);
+
+            if (expectedSeq == -1)
+                expectedSeq = sequence;
+        }
+
+        public Object[] poll() {
+            Object[] next = buffer.get(expectedSeq);
+
+            long now = System.currentTimeMillis();
+
+            // If packet arrived → play it
+            if (next != null)
+            {
+                buffer.remove(expectedSeq);
+                expectedSeq = (expectedSeq + 1) & 0xFFFF;
+                lastPacketTime = now;
+                return next;
+            }
+
+            // If missing too long → use PLC (skip)
+            if (now - lastPacketTime > JITTER_DELAY_MS)
+            {
+                lastPacketTime = now;
+                expectedSeq = (expectedSeq + 1) & 0xFFFF;
+                return null; // triggers Opus concealment
+            }
+
+            // Wait a bit more for late packet
+            return null;
+        }
+    }
+
+    public void queueStaticSoundPacket(int packetSequence, byte[] soundPacket) {
+        queueLocationalSoundPacket(packetSequence, soundPacket, (String) ProxiScapePlugin.PLAYER_INFO[1], (int) ProxiScapePlugin.PLAYER_INFO[2], (int) ProxiScapePlugin.PLAYER_INFO[3], (int) ProxiScapePlugin.PLAYER_INFO[4], (int) ProxiScapePlugin.PLAYER_INFO[5]);
+    }
+
+    public void queueLocationalSoundPacket(int packetSequence, byte[] soundPacket, String name, int world, int x, int y, int plane) {
+        if (spkr != null) {
+            if (jitterBufferMap.containsKey(name)) {
+
+                jitterBufferMap.get(name).add(packetSequence, new Object[]{soundPacket, name, world, x, y, plane});
+                return;
+            }
+
+            JitterBuffer jb = new JitterBuffer();
+
+            jb.add(packetSequence, new Object[]{soundPacket, name, world, x, y, plane});
+
+            jitterBufferMap.put(name, jb);
+
+            try {
+                decoders.put(name, new OpusDecoder(16000, 1));
+            } catch (OpusException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -156,85 +220,116 @@ public class Speaker extends Thread {
 
             int frameSize = 960;
 
-            OpusDecoder decoder = new OpusDecoder(16000, 1);
+            short[] mix = new short[frameSize];
+            short[] pcmOut = new short[frameSize];
 
             ProxiScapePlugin plugin = soundManager.getVoiceClient().getPlugin();
 
             while (running) {
-                Object[] soundPacket = locationalSoundPackets.poll(150, TimeUnit.MILLISECONDS);
 
-                if (soundPacket == null) {
-                    spkr.flush();
-                    decoder.resetState();
-                    continue;
+                long frameStart = System.currentTimeMillis();
+
+                Arrays.fill(mix, (short) 0);
+
+                for (Map.Entry<String, JitterBuffer> entry : jitterBufferMap.entrySet()) {
+                    String user = entry.getKey();
+
+                    if (plugin.getConfig().deafened())
+                        continue;
+
+                    if (plugin.isPublicChatOff())
+                        continue;
+
+                    if (plugin.isPublicChatFriendsOnly() && !plugin.isPlayerFriend(user))
+                        continue;
+
+                    if (plugin.isPlayerIgnored(user))
+                        continue;
+
+                    JitterBuffer jb = entry.getValue();
+                    OpusDecoder decoder = decoders.get(user);
+
+                    if (decoder == null)
+                        continue;
+
+                    Object[] soundPacket = jb.poll();
+
+                    // --- decode (packet OR PLC) ---
+                    if (soundPacket == null)
+                        decoder.decode(null, 0, 0, pcmOut, 0, frameSize, false);
+                    else {
+                        byte[] opusData = (byte[]) soundPacket[0];
+
+                        decoder.decode(
+                                opusData, 0, opusData.length,
+                                pcmOut, 0, frameSize,
+                                false
+                        );
+                    }
+                    
+                    // --- distance attenuation ---
+                    float gain = 1.0f;
+
+                    if (soundPacket != null) {
+                        int x1 = (int) ProxiScapePlugin.PLAYER_INFO[3];
+                        int y1 = (int) ProxiScapePlugin.PLAYER_INFO[4];
+
+                        int x2 = (int) soundPacket[3];
+                        int y2 = (int) soundPacket[4];
+
+                        int dx = x2 - x1;
+                        int dy = y2 - y1;
+
+                        float distance = (float) Math.sqrt(dx * dx + dy * dy);
+
+                        gain = 1.0f - (distance / 20.0f);
+
+                        if (gain < 0f)
+                            gain = 0f;
+                    }
+
+                    // --- mix into global buffer ---
+                    for (int i = 0; i < frameSize; i++) {
+                        int sample = (int) (pcmOut[i] * gain) + mix[i];
+
+                        if (sample > Short.MAX_VALUE) sample = Short.MAX_VALUE;
+                        if (sample < Short.MIN_VALUE) sample = Short.MIN_VALUE;
+
+                        mix[i] = (short) sample;
+                    }
+
+                    if (soundPacket != null) {
+                        soundManager.getVoiceClient()
+                                .getPlugin()
+                                .getOverlay()
+                                .spoke(user);
+                    }
                 }
 
-                if (plugin.getConfig().deafened())
-                    continue;
+                // --- convert mix → bytes ---
+                byte[] output = new byte[frameSize * 2];
 
-                if (spkr == null ||
-                        ((int) ProxiScapePlugin.PLAYER_INFO[2] != (int) soundPacket[2]) ||
-                        ((int) ProxiScapePlugin.PLAYER_INFO[5] != (int) soundPacket[5]) ||
-                        plugin.isPlayerIgnored((String) soundPacket[1]))
-                    continue;
-
-                if (plugin.isPublicChatFriendsOnly() && !plugin.isPlayerFriend((String) soundPacket[1]))
-                    continue;
-
-                if (plugin.isPublicChatOff())
-                    continue;
-
-                byte[] opusData = (byte[]) soundPacket[0];
-
-                short[] pcmOut = new short[frameSize];
-
-                int decoded = decoder.decode(
-                        opusData, 0, opusData.length,
-                        pcmOut, 0, frameSize,
-                        false
-                );
-
-                byte[] pcmBytes = new byte[frameSize * 2];
-
-                // shorts -> bytes
-                for (int i = 0; i < decoded; i++) {
-                    pcmBytes[i * 2] = (byte) (pcmOut[i] & 0xff);
-                    pcmBytes[i * 2 + 1] = (byte) ((pcmOut[i] >> 8) & 0xff);
+                for (int i = 0; i < frameSize; i++) {
+                    output[i * 2] = (byte) (mix[i] & 0xff);
+                    output[i * 2 + 1] = (byte) ((mix[i] >> 8) & 0xff);
                 }
 
-                int x1 = (int) ProxiScapePlugin.PLAYER_INFO[3];
-                int y1 = (int) ProxiScapePlugin.PLAYER_INFO[4];
+                spkr.write(output, 0, output.length);
 
-                int x2 = (int) soundPacket[3];
-                int y2 = (int) soundPacket[4];
+                long frameTime = System.currentTimeMillis() - frameStart;
+                long sleep = 20 - frameTime;
 
-                int dx = x2 - x1;
-                int dy = y2 - y1;
-
-                float distance = (float) Math.sqrt(dx * dx + dy * dy);
-
-                if (distance != 0.0F)
-                    applyGain(pcmBytes, decoded * 2, 1.0F - (distance / 20.0F));
-
-                spkr.write(pcmBytes, 0, decoded * 2);
-
-                soundManager.getVoiceClient().getPlugin().getOverlay().spoke((String) soundPacket[1]);
-
+                if (sleep > 0)
+                {
+                    try {
+                        Thread.sleep(sleep);
+                    } catch (InterruptedException ignored) {}
+                }
             }
-        } catch (InterruptedException | OpusException | LineUnavailableException e) {
+
+        } catch (OpusException | LineUnavailableException e) {
             e.printStackTrace();
         }
-
     }
 
-    private void applyGain(byte[] buffer, int length, float gain) {
-        for (int i = 0; i < length; i += 2) {
-            short sample = (short) ((buffer[i] & 0xFF) | (buffer[i + 1] << 8));
-
-            sample = (short) (sample * gain);
-
-            buffer[i] = (byte) (sample & 0xFF);
-            buffer[i + 1] = (byte) ((sample >> 8) & 0xFF);
-        }
-    }
 }

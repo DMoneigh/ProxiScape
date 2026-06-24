@@ -6,6 +6,8 @@ import com.jcscllc.proxiscape.voiceclient.util.FriendlyByteBuf;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PacketManager {
 
@@ -89,6 +91,8 @@ public class PacketManager {
         if (fbb.readByte() != MAGIC_BYTE) //Read magic byte
             return;
 
+        int packetSequence = fbb.readShort(); //read sequence
+
         long packetTimestamp = fbb.readLong(); //Read timestamp of packet
 
         if (System.currentTimeMillis() - packetTimestamp > PACKET_TTL)
@@ -115,7 +119,7 @@ public class PacketManager {
 
                 byte[] opusIn = fbb.readBytes(length);
 
-                voiceClient.getSoundManager().getSpeaker().queueLocationalSoundPacket(opusIn, name, world, x, y, plane);
+                voiceClient.getSoundManager().getSpeaker().queueLocationalSoundPacket(packetSequence, opusIn, name, world, x, y, plane);
                 break;
 
             case STATIC_VOICE_PACKET:
@@ -123,7 +127,7 @@ public class PacketManager {
 
                 opusIn = fbb.readBytes(length);
 
-                voiceClient.getSoundManager().getSpeaker().queueStaticSoundPacket(opusIn);
+                voiceClient.getSoundManager().getSpeaker().queueStaticSoundPacket(packetSequence, opusIn);
                 break;
 
             case PONG_PACKET:
@@ -139,9 +143,15 @@ public class PacketManager {
         }
     }
 
+    int sequence = 0;
+
     public void write(byte type, SocketAddress to, FriendlyByteBuf data) throws Exception {
         FriendlyByteBuf fbb = new FriendlyByteBuf(MAXIMUM_PACKET_SIZE);
         fbb.writeByte(MAGIC_BYTE); //Write magic byte
+        fbb.writeInt(sequence);
+
+        sequence = (sequence + 1) & 0xFFFF;
+
         fbb.writeLong(System.currentTimeMillis()); //Write timestamp
         fbb.writeByte(type); //Write type
 

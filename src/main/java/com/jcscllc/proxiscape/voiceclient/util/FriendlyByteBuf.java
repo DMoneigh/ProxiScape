@@ -49,6 +49,11 @@ public class FriendlyByteBuf {
         return this;
     }
 
+    public FriendlyByteBuf writeShort(short s) {
+        buffer.putShort(s);
+        return this;
+    }
+
     public FriendlyByteBuf writeLong(long l) {
         buffer.putLong(l);
         return this;
@@ -95,6 +100,8 @@ public class FriendlyByteBuf {
     public long readLong() {
         return buffer.getLong();
     }
+
+    public short readShort() {return buffer.getShort(); }
 
     public UUID readUUID() {
         return new UUID(readLong(), readLong());
