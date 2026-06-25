@@ -234,6 +234,8 @@ public class Speaker extends Thread {
                 for (Map.Entry<String, JitterBuffer> entry : jitterBufferMap.entrySet()) {
                     String user = entry.getKey();
 
+                    System.out.println("user is " + user);
+
                     if (plugin.getConfig().deafened())
                         continue;
 
@@ -252,8 +254,11 @@ public class Speaker extends Thread {
                     if (decoder == null)
                         continue;
 
+                    System.out.println("decoder is " + decoder);
+
                     Object[] soundPacket = jb.poll();
 
+                    System.out.println(soundPacket == null);
                     // --- decode (packet OR PLC) ---
                     if (soundPacket == null)
                         decoder.decode(null, 0, 0, pcmOut, 0, frameSize, false);

@@ -19,6 +19,8 @@ public class PacketManager {
 
     private static final String VOICE_SERVER_DOMAIN_DE = "proxiscape-de.jcsc-llc.com";
 
+//    private static final String VOICE_SERVER_DOMAIN_DE = "127.0.0.2";
+
     private static final String VOICE_SERVER_DOMAIN_AUS = "proxiscape-aus.jcsc-llc.com";
 
     private static final int VOICE_SERVER_PORT = 4545;
@@ -102,6 +104,7 @@ public class PacketManager {
 
         switch (type) {
             case AUTHENTICATE_ACK_PACKET:
+                voiceClient.getKeepAlive().start();
                 break;
 
             case LOCATIONAL_VOICE_PACKET:
@@ -148,7 +151,8 @@ public class PacketManager {
     public void write(byte type, SocketAddress to, FriendlyByteBuf data) throws Exception {
         FriendlyByteBuf fbb = new FriendlyByteBuf(MAXIMUM_PACKET_SIZE);
         fbb.writeByte(MAGIC_BYTE); //Write magic byte
-        fbb.writeInt(sequence);
+
+        fbb.writeShort((short) sequence);
 
         sequence = (sequence + 1) & 0xFFFF;
 
