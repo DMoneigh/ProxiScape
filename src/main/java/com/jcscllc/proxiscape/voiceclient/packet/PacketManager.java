@@ -19,8 +19,6 @@ public class PacketManager {
 
     private static final String VOICE_SERVER_DOMAIN_DE = "proxiscape-de.jcsc-llc.com";
 
-//    private static final String VOICE_SERVER_DOMAIN_DE = "127.0.0.2";
-
     private static final String VOICE_SERVER_DOMAIN_AUS = "proxiscape-aus.jcsc-llc.com";
 
     private static final int VOICE_SERVER_PORT = 4545;

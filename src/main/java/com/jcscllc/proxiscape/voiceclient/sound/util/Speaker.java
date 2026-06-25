@@ -146,7 +146,7 @@ public class Speaker extends Thread {
         private long lastPacketTime;
 
         // 40ms = good default for internet VoIP
-        private static final long JITTER_DELAY_MS = 40;
+        private static final long JITTER_DELAY_MS = 160;
 
         public void add(int sequence, Object[] p)
         {
@@ -227,14 +227,12 @@ public class Speaker extends Thread {
 
             while (running) {
 
-                long frameStart = System.currentTimeMillis();
+                long frameStart = System.nanoTime();
 
                 Arrays.fill(mix, (short) 0);
 
                 for (Map.Entry<String, JitterBuffer> entry : jitterBufferMap.entrySet()) {
                     String user = entry.getKey();
-
-                    System.out.println("user is " + user);
 
                     if (plugin.getConfig().deafened())
                         continue;
@@ -254,11 +252,8 @@ public class Speaker extends Thread {
                     if (decoder == null)
                         continue;
 
-                    System.out.println("decoder is " + decoder);
-
                     Object[] soundPacket = jb.poll();
 
-                    System.out.println(soundPacket == null);
                     // --- decode (packet OR PLC) ---
                     if (soundPacket == null)
                         decoder.decode(null, 0, 0, pcmOut, 0, frameSize, false);
@@ -321,7 +316,7 @@ public class Speaker extends Thread {
 
                 spkr.write(output, 0, output.length);
 
-                long frameTime = System.currentTimeMillis() - frameStart;
+                long frameTime = System.nanoTime() - frameStart;
                 long sleep = 20 - frameTime;
 
                 if (sleep > 0)
