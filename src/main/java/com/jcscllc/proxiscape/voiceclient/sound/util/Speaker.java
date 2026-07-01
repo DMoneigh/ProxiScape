@@ -250,6 +250,8 @@ public class Speaker extends Thread {
 
                     Object[] soundPacket = jb.poll();
 
+                    Arrays.fill(pcmOut, (short) 0);
+
                     // --- decode (packet OR PLC) ---
                     if (soundPacket == null)
                         decoder.decode(null, 0, 0, pcmOut, 0, frameSize, false);

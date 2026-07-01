@@ -55,7 +55,7 @@ public class VoiceClient extends Thread {
 
         soundManager = new SoundManager(this);
 
-        keepAlive = new KeepAlive();
+        createKeepAlive();
 
         packetProcessor.start();
     }
@@ -120,6 +120,10 @@ public class VoiceClient extends Thread {
         }
     }
 
+    public void createKeepAlive() {
+        keepAlive = new KeepAlive();
+    }
+
     public class KeepAlive extends Thread {
 
         private boolean running;
@@ -136,12 +140,16 @@ public class VoiceClient extends Thread {
                 try {
                     Thread.sleep(3000);
 
-                    if (ProxiScapePlugin.PLAYER_INFO != null)
+                    if (ProxiScapePlugin.PLAYER_INFO != null && packetManager.isAuthenticated())
                         packetManager.writeKeepAlivePacket(ProxiScapePlugin.PLAYER_INFO[0] + "");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
+        }
+
+        public void end() {
+            running = false;
         }
     }
 

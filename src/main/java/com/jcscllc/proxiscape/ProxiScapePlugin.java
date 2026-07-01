@@ -102,7 +102,7 @@ public class ProxiScapePlugin extends Plugin {
             try {
                 voiceClient.getPacketManager().createVoiceSocket(getWorldType(world));
 
-                voiceClient.getPacketManager().writeAuthenticatePacket(client.getAccountHash() + "", player.getName());
+                voiceClient.getPacketManager().writeAuthenticatePacket(client.getAccountHash() + "", player.getName(), world, x, y);
 
             } catch (Exception e) {
                 e.printStackTrace();

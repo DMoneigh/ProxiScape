@@ -1,7 +1,9 @@
 package com.jcscllc.proxiscape.voiceclient.packet;
 
+import com.jcscllc.proxiscape.ProxiScapePlugin;
 import com.jcscllc.proxiscape.voiceclient.VoiceClient;
 import com.jcscllc.proxiscape.voiceclient.util.FriendlyByteBuf;
+import lombok.Getter;
 
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
@@ -50,6 +52,9 @@ public class PacketManager {
     private InetSocketAddress sock;
 
     private boolean running;
+
+    @Getter
+    private boolean isAuthenticated;
 
     public PacketManager(VoiceClient voiceClient) {
         this.voiceClient = voiceClient;
@@ -102,7 +107,9 @@ public class PacketManager {
 
         switch (type) {
             case AUTHENTICATE_ACK_PACKET:
+                voiceClient.createKeepAlive();
                 voiceClient.getKeepAlive().start();
+                isAuthenticated = true;
                 break;
 
             case LOCATIONAL_VOICE_PACKET:
@@ -132,11 +139,15 @@ public class PacketManager {
                 break;
 
             case PONG_PACKET:
-                //TODO Show user is connected..
+                isAuthenticated = true;
                 break;
 
             case NO_PACKET:
-                //TODO Say user is not connected
+                isAuthenticated = false;
+                if (ProxiScapePlugin.PLAYER_INFO != null) {
+                    voiceClient.getKeepAlive().end();
+                    writeAuthenticatePacket(ProxiScapePlugin.PLAYER_INFO[0] + "", ProxiScapePlugin.PLAYER_INFO[1] + "", (int) ProxiScapePlugin.PLAYER_INFO[2], (int) ProxiScapePlugin.PLAYER_INFO[3], (int) ProxiScapePlugin.PLAYER_INFO[4]);
+                }
                 break;
 
             default:
@@ -166,10 +177,13 @@ public class PacketManager {
         voiceClient.getSocket().send(new DatagramPacket(writable, writable.length, to));
     }
 
-    public void writeAuthenticatePacket(String hash, String username) throws Exception {
+    public void writeAuthenticatePacket(String hash, String username, int world, int x, int y) throws Exception {
         FriendlyByteBuf buf = new FriendlyByteBuf(MAXIMUM_PACKET_SIZE);
         buf.writeUtf(hash);
         buf.writeUtf(username);
+        buf.writeInt(world);
+        buf.writeInt(x);
+        buf.writeInt(y);
 
         write(AUTHENTICATE_PACKET, sock, buf);
     }
