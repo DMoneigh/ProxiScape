@@ -143,45 +143,92 @@ public class Speaker extends Thread {
         private final Map<Integer, Object[]> buffer = new ConcurrentHashMap<Integer, Object[]>();
 
         private int expectedSeq = -1;
-        private long lastPacketTime;
 
-        // 40ms = good default for internet VoIP
-        private static final long JITTER_DELAY_MS = 75;
+        // Last packet RECEIVED
+        private long lastReceiveTime = 0;
 
-        public void add(int sequence, Object[] p)
-        {
-            if (sequence < expectedSeq)
-                return; // too late, drop
+        // Last frame (real or PLC) returned
+        private long lastPlaybackTime = 0;
 
-            buffer.put(sequence, p);
+        private final long JITTER_DELAY_MS = 75;
+
+        // Restart stream after 500ms of silence
+        private final long STREAM_TIMEOUT_MS = 500;
+
+        // If packet is this many frames ahead, assume a new talk spurt
+        private final int MAX_REORDER = 20;
+
+        private boolean isOlder(int seq, int expected) {
+            return ((expected - seq) & 0xFFFF) < 0x8000;
+        }
+
+        public void add(int sequence, Object[] p) {
+            long now = System.currentTimeMillis();
+
+            // Long silence -> start a new stream immediately
+            if (now - lastReceiveTime > STREAM_TIMEOUT_MS) {
+                buffer.clear();
+                expectedSeq = sequence;
+            }
+
+            lastReceiveTime = now;
 
             if (expectedSeq == -1)
                 expectedSeq = sequence;
+
+            // Drop packets older than what we're expecting
+            if (isOlder(sequence, expectedSeq))
+                return;
+
+            // Huge gap? Probably a new talk spurt.
+            int diff = (sequence - expectedSeq) & 0xFFFF;
+
+            if (diff > MAX_REORDER) {
+                buffer.clear();
+                expectedSeq = sequence;
+            }
+
+            buffer.put(sequence, p);
         }
 
         public Object[] poll() {
-            Object[] next = buffer.get(expectedSeq);
+            if (expectedSeq == -1)
+                return null;
 
             long now = System.currentTimeMillis();
 
-            // If packet arrived → play it
+            // Nobody has sent anything recently.
+            // Stop generating PLC forever.
+            if (now - lastReceiveTime > STREAM_TIMEOUT_MS) {
+                buffer.clear();
+                expectedSeq = -1;
+                return null;
+            }
+
+            Object[] next = buffer.remove(expectedSeq);
+
             if (next != null) {
-                buffer.remove(expectedSeq);
                 expectedSeq = (expectedSeq + 1) & 0xFFFF;
-                lastPacketTime = now;
+                lastPlaybackTime = now;
                 return next;
             }
 
-            // If missing too long → use PLC (skip)
-            if (now - lastPacketTime > JITTER_DELAY_MS) {
-                lastPacketTime = now;
+            // Wait a little longer for late packets.
+            if (now - lastPlaybackTime >= JITTER_DELAY_MS) {
                 expectedSeq = (expectedSeq + 1) & 0xFFFF;
-                return null; // triggers Opus concealment
+                lastPlaybackTime = now;
+
+                // Missing packet -> use Opus PLC
+                return null;
             }
 
-            // Wait a bit more for late packet
             return null;
         }
+
+        int size() {
+            return buffer.size();
+        }
+
     }
 
     public void queueStaticSoundPacket(int packetSequence, byte[] soundPacket) {
@@ -213,10 +260,12 @@ public class Speaker extends Thread {
     @Override
     public void run() {
         try {
-            spkr.open(soundManager.getAudioFormat());
+            spkr.open(soundManager.getAudioFormat(), 960 * 2 * 4);
             spkr.start();
 
             int frameSize = 960;
+            int STARTUP_BUFFER_FRAMES = 4; // ~80ms
+            boolean started = false;
 
             short[] mix = new short[frameSize];
             short[] pcmOut = new short[frameSize];
@@ -225,7 +274,21 @@ public class Speaker extends Thread {
 
             while (running) {
 
+                long frameStart = System.nanoTime();
+
                 Arrays.fill(mix, (short) 0);
+
+                int bufferedFrames = 0;
+                for (JitterBuffer jb : jitterBufferMap.values()) {
+                    bufferedFrames += jb.size(); // you need this method
+                }
+
+                if (!started && bufferedFrames < STARTUP_BUFFER_FRAMES) {
+                    Thread.sleep(5);
+                    continue;
+                }
+
+                started = true;
 
                 for (Map.Entry<String, JitterBuffer> entry : jitterBufferMap.entrySet()) {
                     String user = entry.getKey();
@@ -252,17 +315,17 @@ public class Speaker extends Thread {
 
                     Arrays.fill(pcmOut, (short) 0);
 
-                    // --- decode (packet OR PLC) ---
-                    if (soundPacket == null)
+                    if (soundPacket == null) {
+                        if (!started) {
+                            continue;
+                        }
+
+                        // Missing packet during an active stream.
                         decoder.decode(null, 0, 0, pcmOut, 0, frameSize, false);
-                    else {
+                    } else {
                         byte[] opusData = (byte[]) soundPacket[0];
 
-                        decoder.decode(
-                                opusData, 0, opusData.length,
-                                pcmOut, 0, frameSize,
-                                false
-                        );
+                        decoder.decode(opusData, 0, opusData.length, pcmOut, 0, frameSize, false);
                     }
                     
                     // --- distance attenuation ---
@@ -314,10 +377,19 @@ public class Speaker extends Thread {
 
                 spkr.write(output, 0, output.length);
 
+                long frameTimeNs = System.nanoTime() - frameStart;
+                long sleepNs = 20_000_000 - frameTimeNs;
+
+                if (sleepNs > 0) {
+                    Thread.sleep(sleepNs / 1_000_000, (int) (sleepNs % 1_000_000));
+                }
+
             }
 
         } catch (OpusException | LineUnavailableException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
