@@ -334,9 +334,14 @@ public class Speaker extends Thread {
                     if (soundPacket != null) {
                         int x1 = (int) ProxiScapePlugin.PLAYER_INFO[3];
                         int y1 = (int) ProxiScapePlugin.PLAYER_INFO[4];
+                        int plane1 = (int) ProxiScapePlugin.PLAYER_INFO[5];
 
                         int x2 = (int) soundPacket[3];
                         int y2 = (int) soundPacket[4];
+                        int plane2 = (int) soundPacket[5];
+
+                        if (plane1 != plane2)
+                            continue;
 
                         int dx = x2 - x1;
                         int dy = y2 - y1;
