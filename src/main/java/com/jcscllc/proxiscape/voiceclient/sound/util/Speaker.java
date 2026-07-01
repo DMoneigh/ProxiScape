@@ -146,7 +146,7 @@ public class Speaker extends Thread {
         private long lastPacketTime;
 
         // 40ms = good default for internet VoIP
-        private static final long JITTER_DELAY_MS = 160;
+        private static final long JITTER_DELAY_MS = 75;
 
         public void add(int sequence, Object[] p)
         {
@@ -165,8 +165,7 @@ public class Speaker extends Thread {
             long now = System.currentTimeMillis();
 
             // If packet arrived → play it
-            if (next != null)
-            {
+            if (next != null) {
                 buffer.remove(expectedSeq);
                 expectedSeq = (expectedSeq + 1) & 0xFFFF;
                 lastPacketTime = now;
@@ -174,8 +173,7 @@ public class Speaker extends Thread {
             }
 
             // If missing too long → use PLC (skip)
-            if (now - lastPacketTime > JITTER_DELAY_MS)
-            {
+            if (now - lastPacketTime > JITTER_DELAY_MS) {
                 lastPacketTime = now;
                 expectedSeq = (expectedSeq + 1) & 0xFFFF;
                 return null; // triggers Opus concealment
