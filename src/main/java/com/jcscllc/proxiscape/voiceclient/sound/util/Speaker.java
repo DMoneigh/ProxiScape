@@ -227,8 +227,6 @@ public class Speaker extends Thread {
 
             while (running) {
 
-                long frameStart = System.nanoTime();
-
                 Arrays.fill(mix, (short) 0);
 
                 for (Map.Entry<String, JitterBuffer> entry : jitterBufferMap.entrySet()) {
@@ -316,15 +314,6 @@ public class Speaker extends Thread {
 
                 spkr.write(output, 0, output.length);
 
-                long frameTime = System.nanoTime() - frameStart;
-                long sleep = 20 - frameTime;
-
-                if (sleep > 0)
-                {
-                    try {
-                        Thread.sleep(sleep);
-                    } catch (InterruptedException ignored) {}
-                }
             }
 
         } catch (OpusException | LineUnavailableException e) {

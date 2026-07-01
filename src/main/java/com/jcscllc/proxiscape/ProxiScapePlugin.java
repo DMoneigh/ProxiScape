@@ -80,9 +80,9 @@ public class ProxiScapePlugin extends Plugin {
         overlayManager.remove(overlay);
     }
 
-//    int lastWorld = -1;
-//    int lastX = -1;
-//    int lastY = -1;
+    int lastWorld = -1;
+    int lastX = -1;
+    int lastY = -1;
 
     @Subscribe
     public void onGameTick(GameTick event) {
@@ -118,12 +118,12 @@ public class ProxiScapePlugin extends Plugin {
                 wp.getPlane()
         };
 
-//        if (lastWorld == world && lastX == x && lastY == y)
-//            return;
-//
-//        lastWorld = world;
-//        lastX = x;
-//        lastY = y;
+        if (lastWorld == world && lastX == x && lastY == y)
+            return;
+
+        lastWorld = world;
+        lastX = x;
+        lastY = y;
 
         try {
             voiceClient.getPacketManager().writeUpdatePositionPacket(client.getAccountHash() + "", world, x, y);
